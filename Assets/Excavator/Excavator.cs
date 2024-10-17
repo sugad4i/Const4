@@ -515,6 +515,8 @@ public class Excavator
             subCamera.rect = new Rect(0F, 0F, 0.5F, 1F);
         else if( _number_excavator == 1 )
             subCamera.rect = new Rect(0.5F, 0F, 0.5F, 1F);
+        else if( _number_excavator == 2 )
+            subCamera.rect = new Rect(0.5F, 0F, 0.5F, 1F);
     }
 
     public void ChangeCameraMode( bool camera_mode_operator )

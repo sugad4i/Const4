@@ -5,16 +5,16 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     ///--- for Excavator Object 
-    const int _number_excavator = 2;
+    const int _number_excavator = 3;
     private GameObject[] _gob_excavator = new GameObject[_number_excavator];
     private ExcavatorController[] _excavator_controller = new ExcavatorController[_number_excavator]; 
-    private string[] _name_excavator = { "Excavator1", "Excavator2" };
+    private string[] _name_excavator = { "Excavator1", "Excavator2", "Excavator3" };
     private int _number_control_excavator = 0;
 
     ///--- for Canvas Object
     private GameObject[] _gob_canvas = new GameObject[_number_excavator];
     private CanvasController[] _canvas_controller = new CanvasController[_number_excavator];
-    private string[] _name_canvas = { "CanvasExcavator1", "CanvasExcavator2" };
+    private string[] _name_canvas = { "CanvasExcavator1", "CanvasExcavator2" , "CanvasExcavator3" };
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////

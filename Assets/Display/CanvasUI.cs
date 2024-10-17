@@ -24,22 +24,22 @@ public class CanvasUIController : MonoBehaviour
 
     ////////////////////////////////////////////////////////////////////////////////////////
     ///--- for Excavator Object 
-    const int _number_excavator = 2;
+    const int _number_excavator = 3;
     private GameObject[] _gob_excavator = new GameObject[_number_excavator];
     private ExcavatorController[] _excavator_controller = new ExcavatorController[_number_excavator]; 
-    private string[] _name_excavator = { "Excavator1", "Excavator2" };
-    private int[] _operation_mode = new int[_number_excavator]{ 0, 0 }; ///--- { 0:Gamepad 1:Teach 2:Play 3:Play and Intervine 4: Experiment }
-    private int[] _state_play  = new int[_number_excavator]{ 0, 0 };    ///--- { 0:Stop, 1:Play, 2:Pause }
-    private int[] _count_play_data = new int[_number_excavator]{ 0, 0 };
-    private float[] _timer_sleep   = new float[_number_excavator]{ 0F, 0F};
-    private float[] _timer_sleep_max = new float[_number_excavator]{ 5.0F, 5.0F };
+    private string[] _name_excavator = { "Excavator1", "Excavator2" , "Excavator3" };
+    private int[] _operation_mode = new int[_number_excavator]{ 0, 0, 0 }; ///--- { 0:Gamepad 1:Teach 2:Play 3:Play and Intervine 4: Experiment }
+    private int[] _state_play  = new int[_number_excavator]{ 0, 0, 0 };    ///--- { 0:Stop, 1:Play, 2:Pause }
+    private int[] _count_play_data = new int[_number_excavator]{ 0, 0, 0 };
+    private float[] _timer_sleep   = new float[_number_excavator]{ 0F, 0F, 0F};
+    private float[] _timer_sleep_max = new float[_number_excavator]{ 5.0F, 5.0F, 5.0F};
 
-    private int[,] _play_data_point = new int[2, 4] { { 100, 200, 300, 400 }, { 500, 600, 700, 800 } };
+    private int[,] _play_data_point = new int[3, 4] { { 100, 200, 300, 400 }, { 500, 600, 700, 800 }, { 500, 600, 700, 800 } };
 
     ///--- for Image and Text Object
     private RectTransform _rect_transform_image_circle;
     private RectTransform[] _rect_transform_text_ex_number = new RectTransform[_number_excavator];
-    private string[] _name_text_ex_number = { "Text_ex_number_1", "Text_ex_number_2" };
+    private string[] _name_text_ex_number = { "Text_ex_number_1", "Text_ex_number_2", "Text_ex_number_3" };
     private float[] _radius_circle = new float[_number_excavator];
 
     ///--- Start is called before the first frame update

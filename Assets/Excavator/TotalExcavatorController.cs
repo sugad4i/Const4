@@ -104,11 +104,11 @@ public class InputCommand
 public class TotalExcavatorController : MonoBehaviour
 {
     ///--- for Excavator Object 
-    const int _number_excavator = 2;
+    const int _number_excavator = 3;
     private GameObject[] _gob_excavator = new GameObject[_number_excavator];
     private ExcavatorController[] _excavator_controller = new ExcavatorController[_number_excavator]; 
     private ExcavatorState _excavator_state = new ExcavatorState();
-    private string[] _name_excavator = { "Excavator1", "Excavator2" };
+    private string[] _name_excavator = { "Excavator1", "Excavator2" , "Excavator3" };
     private int _number_control_excavator = 0;
 
     ///--- for Camera Object
@@ -133,8 +133,8 @@ public class TotalExcavatorController : MonoBehaviour
     bool flag_teach_init = false;
 
     ///--- Play Data Point of Excavator State Change
-    private static readonly int[,] _play_data_point = new int[_number_excavator, 4] { { 528, 1682, 2637, 3640 }, { 282, 1811, 2416, 3042 } };
-    private static readonly float[] _timer_sleep_max = new float[_number_excavator] { 5.0F, 5.0F };
+    private static readonly int[,] _play_data_point = new int[_number_excavator, 4] { { 528, 1682, 2637, 3640 }, { 282, 1811, 2416, 3042 } , { 282, 1811, 2416, 3042 }};
+    private static readonly float[] _timer_sleep_max = new float[_number_excavator] { 5.0F, 5.0F , 5.0F };
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +373,7 @@ public class TotalExcavatorController : MonoBehaviour
             if( !flag_teach_init )
             {
                 ///--- Prepare Save Data    
-                StreamWriter sw_title = new StreamWriter(@"Assets\Excavator\TrajectoryData\Teach_"+file_name, false, Encoding.GetEncoding("Shift_JIS"));
+                StreamWriter sw_title = new StreamWriter(@"Assets/Excavator/TrajectoryData/Teach_"+file_name, false, Encoding.GetEncoding("Shift_JIS"));
                 string[] s1 = { "pos_x", "pos_y", "pos_z", "swing", "arm", "boom", "bucket", "trackRight", "trackLeft" };
                 string s2 = string.Join(",", s1);
                 sw_title.WriteLine(s2);
@@ -387,7 +387,7 @@ public class TotalExcavatorController : MonoBehaviour
             Debug.Log( "  _excavator_state.swing:="+_excavator_state.swing+" _input_swing:=");
 
             ///--- Save Excavator State Data
-            StreamWriter sw = new StreamWriter(@"Assets\Excavator\TrajectoryData\Teach_"+file_name, true, Encoding.GetEncoding("Shift_JIS"));
+            StreamWriter sw = new StreamWriter(@"Assets/Excavator/TrajectoryData/Teach_"+file_name, true, Encoding.GetEncoding("Shift_JIS"));
             string[] str = { _excavator_state.pos_x.ToString("f4"), _excavator_state.pos_y.ToString("f4"), _excavator_state.pos_z.ToString("f4"),
                              _excavator_state.swing.ToString("f4"), _excavator_state.arm.ToString("f4"), _excavator_state.boom.ToString("f4"),
                              _excavator_state.bucket.ToString("f4"), _excavator_state.trackRight.ToString("f4"), _excavator_state.trackLeft.ToString("f4") };
@@ -550,7 +550,7 @@ public class TotalExcavatorController : MonoBehaviour
 //////////////////////////////////////////////////////////////////////////////////////////
     private void CheckControlExcavatorNumber()
     {
-        if ( Input.GetKey( KeyCode.Keypad1 ) || Input.GetKey( KeyCode.Keypad2 ) || Input.GetKeyDown ("joystick button 5"))
+        if ( Input.GetKey( KeyCode.Keypad1 ) || Input.GetKey( KeyCode.Keypad2 ) || Input.GetKey( KeyCode.Keypad3 )|| Input.GetKeyDown ("joystick button 5"))
         {
             if( _operation_mode != 4 )
             {
@@ -566,6 +566,9 @@ public class TotalExcavatorController : MonoBehaviour
 
             else if ( Input.GetKey( KeyCode.Keypad2 ) )
                 _number_control_excavator = 1;
+
+            else if ( Input.GetKey( KeyCode.Keypad3 ) )
+                _number_control_excavator = 2;
 
             else if( Input.GetKeyDown ("joystick button 5") )
             {
