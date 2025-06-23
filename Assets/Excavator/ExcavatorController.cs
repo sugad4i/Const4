@@ -6,6 +6,8 @@ using UnityEngine.UI;
 using System.Text;     // for OutPutText
 using System.IO;       // for OutPutText
 
+using Const;
+
 
 public class ExcavatorController : MonoBehaviour
 {
@@ -15,6 +17,7 @@ public class ExcavatorController : MonoBehaviour
     public float deltaAccel = 0.5F;
     public float maxAccel = 1F;
     public float deltaDirection = 1F;
+    public float machine_number = 1F;
     
     public bool useHook = false;
     public bool enableRearCameras = true;
@@ -44,8 +47,8 @@ public class ExcavatorController : MonoBehaviour
     private int _lap_play_data = 0;
     private int _count_play_data = 0;
     private int _state_tp = 0; ///--- { 0:stop, 1:teach or play, 2:pause }
-    private int[] _play_data_point = { 200, 1000, 2000, 3000 };
-    private float _timer_sleep_max = 5.0F;
+    private int[] _play_data_point = { 4, 718, 1149, 1712 };
+    private float _timer_sleep_max = 0.1F;
     private float _timer_laps  = 0F;
     private float _timer_sleep = 0F;
     private bool _flag_intervene = false;
@@ -60,6 +63,7 @@ public class ExcavatorController : MonoBehaviour
     //---- Start is called before the first frame update
     void Start()
     {
+
         Debug.Log( " Start Excavator Name "+transform.root.gameObject.name );
         string excavator_name = transform.root.gameObject.name;
         excavator_name        = excavator_name.Replace("Excavator","");
@@ -90,7 +94,9 @@ public class ExcavatorController : MonoBehaviour
         ///--- Normal Gamepad Control Mode
         if( _operation_mode == 0 )
         {
+            Debug.Log($"delta_swing: {_input_command.delta_swing}, delta_arm: {_input_command.delta_arm}, delta_boom: {_input_command.delta_boom}, delta_bucket: {_input_command.delta_bucket}");
             ///---
+            Debug.Log("操作しようぜ");
             if( _control_mode == 0 )
                 JointControl();
 
@@ -124,7 +130,7 @@ public class ExcavatorController : MonoBehaviour
         }
 
         ///--- Play and Intervene Mode
-        else if( _operation_mode == 3 || _operation_mode == 4 )
+        else if( _operation_mode == 3 || _operation_mode == 4 || _operation_mode == 5)
         {
             if( !_flag_load_data )
                 LoadPlayData();
@@ -137,11 +143,17 @@ public class ExcavatorController : MonoBehaviour
             if( _flag_play_init_position )
             {
                 if( _state_tp == 1 )
+                {
                     // PlayInterveneControl();
                     PlayInterveneControlModifiedTrajectory();
-                
+                    //Debug.Log("position control");
+                    //Debug.Log($"stopper.bluemode: {stopper.bluemode}");
+                    //Debug.Log($"delta_pos_x: {_input_command.delta_pos_x}, delta_pos_y: {_input_command.delta_pos_y}");
+                    //JointControl();
+                }
                 else if( _excavator_state.state_name == "Waiting" )
                 {
+                    Debug.Log("_excavator_state.state_name == Waiting");
                     _timer_sleep += Time.deltaTime;
 
                     if( _flag_intervene || _timer_sleep > _timer_sleep_max)
@@ -149,15 +161,70 @@ public class ExcavatorController : MonoBehaviour
                         _state_tp = 1;
                         _count_play_data++;
                         _timer_sleep = 0F;
-                        // Debug.Log( " "+transform.root.gameObject.name+" timer:="+_timer_sleep);
                     }
+                }
+                if (stopper.movemode[(int)machine_number] == 1)
+                {
+                    Debug.Log($"Excavator({(int)machine_number}) pause");
+                    StopPlayData();
+                }
+                if (stopper.movemode[(int)machine_number] == 2)
+                {
+                    //Debug.Log("movemodeが0");
+                    StartTeachPlay();
+                    stopper.movemode[(int)machine_number] = 0;
+                    Debug.Log($"Excavator({(int)machine_number}) restart");
+                }
+                else if (stopper.movemode[(int)machine_number] == 2)
+                {
+                    //Debug.Log("movemodeが2");
+                    PositionControl();
+                    _state_tp = 0;
+                }
+                else if (stopper.movemode[(int)machine_number] == 10)
+                {
+                    //Debug.Log("movemodeが10");
+                    PlayInterveneControlModifiedTrajectory();
+                    _state_tp = 0;
+                }
+
+                if (stopper.bluemode[(int)machine_number] == 2)
+                {
+                    //Debug.Log("bluemodeが2");
+                    //Debug.Log($"delta_swing: {_input_command.delta_swing}, delta_arm: {_input_command.delta_arm}, delta_boom: {_input_command.delta_boom}, delta_bucket: {_input_command.delta_bucket}");
+                    PositionControl();
+                    _state_tp = 0;
+                    //GoTomiddlePosition();
+                }
+                else if (stopper.bluemode[(int)machine_number] == 3)
+                {
+                    GoTomiddlePosition();
+                    Debug.Log("GoTomiddlePosition");
+                    //if(_count_play_data == 0)
+                    //{
+                    //    stopper.bluemode = 4;
+                    //}
+                }
+                else if(stopper.bluemode[(int)machine_number] == 5)
+                {
+                    StartTeachPlay();
+                    stopper.movemode[(int)machine_number] = 0;
+                    stopper.bluemode[(int)machine_number] = 0;
+                    Debug.Log($"Excavator({(int)machine_number}) restart");
                 }
 
                 _flag_intervene = false;
 
                 // Debug.Log( " "+transform.root.gameObject.name+" count:="+_count_play_data+" state:="+_excavator_state.state_name );
             }
-           // Debug.Log( " _count_play_data:= "+_count_play_data );
+            //Debug.Log( " _count_play_data:= "+_count_play_data );
+        }
+        Debug.Log("movemode = " + stopper.movemode);
+        Debug.Log("operation mode ="+ _operation_mode);
+
+        if(stopper.movemode[(int)machine_number] == 3)
+        {
+            
         }
     }
 
@@ -175,7 +242,7 @@ public class ExcavatorController : MonoBehaviour
         _excavator_state.pos_y = position_effector.y;
         _excavator_state.pos_z = position_effector.z;
 
-        if( _operation_mode == 2 || _operation_mode == 3 || _operation_mode == 4 )
+        if( _operation_mode == 2 || _operation_mode == 3 || _operation_mode == 4 || _operation_mode == 5)
         {
             if( _count_play_data < _play_data_point[0] )
                 _excavator_state.state_name = "Turning1";
@@ -222,6 +289,7 @@ public class ExcavatorController : MonoBehaviour
 
     private void PositionControl()
     {
+                Debug.Log("PositionControl");
         ///--- Move Arm and Boom
         StartCoroutine( excavator.PositionControlArm( _input_command.delta_pos_x, _input_command.delta_pos_y ) );
         ///--- Move Swing
@@ -405,10 +473,14 @@ public class ExcavatorController : MonoBehaviour
         }
     }
 
+
     private void PlayInterveneControlModifiedTrajectory()
     {
         ///--- Update Excavator State
         GetExcavatorState();
+
+        Debug.Log("movemode = " + stopper.movemode[(int)machine_number]);
+        Debug.Log("bluemode = " + stopper.bluemode[(int)machine_number]);
 
         ///--- Calculate Delta Value
         _play_command.delta_pos_x = _list_modified_play_data[_count_play_data].pos_x - _excavator_state.pos_x;
@@ -416,14 +488,50 @@ public class ExcavatorController : MonoBehaviour
         _play_command.delta_swing  = _list_modified_play_data[_count_play_data].swing - _excavator_state.swing;
         _play_command.delta_bucket = _list_modified_play_data[_count_play_data].bucket - _excavator_state.bucket;
 
+        if(stopper.movemode[(int)machine_number] == 1)
+        {
+            Debug.Log("movemode == 1");
+        }
+        
+        else if(stopper.movemode[(int)machine_number] == 2)
+        {   
+            Debug.Log("movemode == 2");
+        }
+        else if(stopper.movemode[(int)machine_number] == 10)
+        {
+
+            if(stopper.bluemode[(int)machine_number] == 1)
+            {
+                //逆再生
+                int temp = CheckReachPlayDataPosition( _play_command );
+                if( temp == 4 )
+                    _count_play_data--;
+
+            }
+            else if(stopper.bluemode[(int)machine_number] == 2)
+            {
+
+
+            }
+            else if(stopper.bluemode[(int)machine_number] == 3)
+            {
+            
+            }
+
+        }
+        else
+        {    
         ///--- STEP 0: Move to Initial Position
+
+        
         if( _count_play_data == 0 )
         {
+            Debug.Log("startteachplay");
             ///---
             int temp = CheckReachPlayDataPosition( _play_command );
             if( temp == 4 )
                 _count_play_data++;
-
+            //Debug.Log("STEP0");
             // Debug.Log( " X error:= "+Mathf.Abs(_play_command.delta_pos_x)+" target:= "+_list_modified_play_data[_count_play_data].pos_x+" current:= "+_excavator_state.pos_x );
             // Debug.Log( " Y error:= "+Mathf.Abs(_play_command.delta_pos_y)+" target:= "+_list_modified_play_data[_count_play_data].pos_y+" current:= "+_excavator_state.pos_y );
             // Debug.Log( " Mathf.Abs(_play_command.delta_pos_x):= "+Mathf.Abs(_play_command.delta_pos_x)+" Mathf.Abs(_play_command.delta_pos_y):= "+Mathf.Abs(_play_command.delta_pos_y) );
@@ -438,6 +546,7 @@ public class ExcavatorController : MonoBehaviour
             int temp = CheckReachPlayDataPosition( _play_command );
             if( temp == 4 )
                 _count_play_data++;
+            //Debug.Log("STEP1");
         }
 
         ///--- STEP 2: Waiting Intervene Action
@@ -445,6 +554,7 @@ public class ExcavatorController : MonoBehaviour
         {
             PuasePlayData();
             _play_command.Clear();
+            //Debug.Log("STEP2");
         }
 
         ///--- STEP 3: Drilling
@@ -477,11 +587,18 @@ public class ExcavatorController : MonoBehaviour
             // Debug.Log ( " bucket _play_command:="+_play_command.delta_bucket+" _sum_intervene_command:="+_sum_intervene_command.delta_bucket+" now:="+_excavator_state.bucket );
 
             _count_play_data++;
+            //Debug.Log("STEP3");
         }
 
         ///--- STEP 4: Turning 2
         else if( _play_data_point[1] <= _count_play_data && _count_play_data < _play_data_point[2] )
         {
+            if(stopper.movemode[(int)machine_number] == 3)
+            {
+                stopper.movemode[(int)machine_number] = 1;
+            }
+            else
+            {  
             ///--- Adjust Swing Angle to Fit the intervention
             if( Mathf.Sign( _list_play_data[_play_data_point[2]].swing - _excavator_state.swing ) != Mathf.Sign( _play_command.delta_swing ) )
                 _play_command.delta_swing  = 0F;
@@ -491,6 +608,8 @@ public class ExcavatorController : MonoBehaviour
             int temp = CheckReachPlayDataPosition( _play_command );
             if( temp == 4 )
                 _count_play_data++;
+            //Debug.Log("STEP4");
+            }
         }
 
         ///--- STEP 5: Releasing
@@ -501,10 +620,14 @@ public class ExcavatorController : MonoBehaviour
             ///---
             int temp = CheckReachPlayDataPosition( _play_command );
             if( temp == 4 )
-                _count_play_data++;
-        }
+            {
+                 _count_play_data++;
+                 //Debug.Log(temp);
+            }
+            //Debug.Log("STEP5");
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+        
         ///--- Move Arm and Boom
         StartCoroutine( excavator.PositionControlArm(  _play_command.delta_pos_x,  _play_command.delta_pos_y ) );
         ///--- Move Swing
@@ -514,7 +637,6 @@ public class ExcavatorController : MonoBehaviour
         if ( Mathf.Abs(_play_command.delta_bucket) > 0.001F)
             excavator.bucketRotate( _play_command.delta_bucket );
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///--- Save Modified Play Data
         if( _excavator_state.state_name == "Drilling" )
         {
@@ -526,9 +648,9 @@ public class ExcavatorController : MonoBehaviour
 
         ///--- Update Lap Time
         _timer_laps += Time.deltaTime;
-
+        //Debug.Log(_count_play_data);
         ///--- When the Playing Data Reaches the End, Return to the Beginning
-        if( _count_play_data >= _max_play_data )
+        if( _count_play_data >= _play_data_point[3] )
         {
             Debug.Log( " "+transform.root.gameObject.name+" lap:="+(_lap_play_data+1)+" time:="+_timer_laps );
             _timer_laps = 0F;
@@ -537,13 +659,15 @@ public class ExcavatorController : MonoBehaviour
             
             _sum_intervene_command.Clear();
             ModifiedPlayDataTrajectory();
+            //Debug.Log("STEP6");
+        }
         }
     }
 
     private void LoadPlayData()
     {
         ///--- Load Play Excavator Data
-        string file_path = @"Assets\Excavator\TrajectoryData\"+transform.root.gameObject.name+"_trajectory_data.csv";
+        string file_path = @"Assets/Excavator/TrajectoryData/"+transform.root.gameObject.name+"_trajectory_data.csv";
         StreamReader sr = new StreamReader( file_path );
         var row_data = sr.ReadLine(); //一行読み込み
 
@@ -660,6 +784,41 @@ public class ExcavatorController : MonoBehaviour
             _flag_play_init = false;
             _flag_play_init_position = true;
             Debug.Log( " "+transform.root.gameObject.name+" is initial position." );
+            stopper.movemode[(int)machine_number] = 2;
+            stopper.bluemode[(int)machine_number] = 0;
+        }
+    }
+
+    private void GoTomiddlePosition()
+    {
+        ///--- Update Excavator State
+        GetExcavatorState();
+
+        ///--- Calculate Delta Value
+        _play_command.delta_pos_x = _list_play_data[718].pos_x - _excavator_state.pos_x;
+        _play_command.delta_pos_y = _list_play_data[718].pos_y - _excavator_state.pos_y;
+        _play_command.delta_swing  = _list_play_data[718].swing - _excavator_state.swing;
+        _play_command.delta_bucket = _list_play_data[718].bucket - _excavator_state.bucket;
+
+        _count_play_data = 718;
+        ///--- Move Arm and Boom
+        StartCoroutine( excavator.PositionControlArm( _play_command.delta_pos_x, _play_command.delta_pos_y ) );
+        ///--- Move Swing
+        if ( Mathf.Abs(_play_command.delta_swing) > 0.001F )
+            excavator.swingRotate( _play_command.delta_swing );
+        ///--- Move Bucket
+        if ( Mathf.Abs(_play_command.delta_bucket) > 0.001F)
+            excavator.bucketRotate( _play_command.delta_bucket );
+
+
+        int temp = CheckReachPlayDataPosition( _play_command );
+        if( temp == 4 )
+        {
+            _flag_play_init = false;
+            _flag_play_init_position = true;
+            Debug.Log( " "+transform.root.gameObject.name+" is middle position." );
+            //stopper.movemode[(int)machine_number] = 2;
+            stopper.bluemode[(int)machine_number] = 5;
         }
     }
 
@@ -722,15 +881,20 @@ public class ExcavatorController : MonoBehaviour
 
     public void StartTeachPlay()
     {
+        Debug.Log("StartTeachPlay");
         if( _operation_mode == 1 )
             _state_tp = 1;
-        else if( _operation_mode == 2 || _operation_mode == 3 || _operation_mode == 4 )
+
+        else if( _operation_mode == 2 || _operation_mode == 3 || _operation_mode == 4 || _operation_mode == 5)
         {
             if( _flag_play_init_position == true )
+            {
                 _state_tp = 1;
+            }
             else
                 Debug.Log( " "+transform.root.gameObject.name+" is not initial position, we cannot start play. ");
         }
+
     }
 
     public void StopTeachPlay()

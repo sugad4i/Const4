@@ -56,5 +56,10 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Excavator2_Teach_and_Play.sln"
+    "dotnet.defaultSolution": "Excavator_250425.sln",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "notebook.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnPaste": true,
+    "files.defaultLanguage": ""
 }

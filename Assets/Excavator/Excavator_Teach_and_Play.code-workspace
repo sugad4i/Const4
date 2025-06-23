@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../../../Excavator_Teach_and_Play"
+		},
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../../../Documents/KOBE-u/code"
+		}
+	],
+	"settings": {
+		"dotnet.defaultSolution": "Excavator_Teach_and_Play.sln"
+	}
+}

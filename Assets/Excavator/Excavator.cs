@@ -322,7 +322,6 @@ public class Excavator
     GameObject leftTrack;
     Vector3    positionEffector;
     Vector3    positionHook;
-
     Rigidbody rb;
 
     Camera operatorViewCamera;
@@ -340,6 +339,12 @@ public class Excavator
         rb = transform.GetComponent<Rigidbody>();
         rb.mass = 20000;  // 20,000 Kg
         rb.useGravity = true;
+        // Freeze Position (位置の固定)
+        rb.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezePositionZ;
+
+        // Freeze Rotation (回転の固定)
+        rb.constraints |= RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+        
 
         excavatorForwardAxis = transform.Find(excavatorForwardPath);
         swingAxis = transform.Find(swingAxisPath);
