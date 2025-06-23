@@ -65,7 +65,7 @@ public class DashcamManager : MonoBehaviour
             }
         }
 
-        if (stopper.capturemode == 1 && !isRecording) // 録画開始
+        if (stopper.capturemode[(int)machine_number] == 1 && !isRecording) // 録画開始
         {
             StartRecording();
         }

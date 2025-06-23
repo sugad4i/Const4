@@ -6,7 +6,7 @@ namespace Const
     {
         // グローバル変数として静的変数を定義
         //public static int movemode = 0;
-        public static int capturemode = 0;
+        public static int[] capturemode = new int[100]; // 0～99
         //public static int bluemode = 0;
         public static int[] movemode = new int[100];      // 0～99
         //public static int[] capturemode = new int[100];
