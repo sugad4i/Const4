@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using Const;
 
 
-public class SphereManager4 : MonoBehaviour
+public class SphereManager5 : MonoBehaviour
 {
     // サブスコアを加算するための設定
     public float minDisplayInterval = 2f;  // 最小の待機時間
@@ -44,10 +44,7 @@ public class SphereManager4 : MonoBehaviour
     private float forcedHideTimer = -1f; // Kキーでの強制消去タイマー
     public float forcedHideDelay = 3f; // Kキー押下後に消えるまでの遅延時間
 
-    public void Delay(float delay)
-    {
-        StartCoroutine(DelayedStartRecording(delay));
-    }
+
 
     private IEnumerator DelayedStartRecording(float delay)
     {
@@ -165,10 +162,6 @@ public class SphereManager4 : MonoBehaviour
         isTriggered = false;
         stopper.capturemode[(int)machine_number] = 1;
         Debug.Log("movemode = " + stopper.movemode);   
-
-        Delay(2.0f);
-
-        Debug.Log("delay");
         // 5秒後にアイテムを自動で消す
         Invoke("HideItem", visibleDuration);
     }
@@ -188,22 +181,4 @@ public class SphereManager4 : MonoBehaviour
         stopper.capturemode[(int)machine_number] = 0;
     }
 
-    //private void MoveItemToRandomOffset()
-    //{
-        // 相対的にランダムなオフセットを計算
-    //    Vector3 randomOffset = new Vector3(
-    //        Random.Range(minOffset.x, maxOffset.x),
-    //        Random.Range(minOffset.y, maxOffset.y),
-    //        Random.Range(minOffset.z, maxOffset.z)
-    //    );
-
-        // 初期位置にオフセットを追加して新しい位置を設定
-    //    item.transform.position = initialPosition + randomOffset;
-    //}
-
-    //private void ScheduleNextAppearance()
-    //{
-        // 次の表示をランダムな時間後に再スケジュール
-    //    displayTimer = 0f; // タイマーをリセット
-    //}
 }

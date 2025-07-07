@@ -219,7 +219,7 @@ public class ExcavatorController : MonoBehaviour
             }
             //Debug.Log( " _count_play_data:= "+_count_play_data );
         }
-        Debug.Log("movemode = " + stopper.movemode);
+        Debug.Log("movemode = " + stopper.movemode[(int)machine_number] );
         Debug.Log("operation mode ="+ _operation_mode);
 
         if(stopper.movemode[(int)machine_number] == 3)

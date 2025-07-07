@@ -12,5 +12,6 @@ namespace Const
         //public static int[] capturemode = new int[100];
         public static int[] bluemode = new int[100];
         // ゲーム開始時などにmovemodeを変更する場合は、こちらで処理を追加
+
     }
 }

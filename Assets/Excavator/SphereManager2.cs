@@ -12,7 +12,7 @@ public class SphereManager2 : MonoBehaviour
     public float triggerDistanceItem1 = 1f;
     public float triggerDistanceItem2 = 1.2f;
     public float item3Probability = 1f;
-    public float machine_number = 1f;    
+    public int machine_number = 1;
 
 
     public int scoreAmount = 1;
@@ -53,7 +53,7 @@ public class SphereManager2 : MonoBehaviour
             ScoreManager.Instance.AddMainScore(scoreAmount);
         }
         // `distanceToItem1` が `triggerDistanceItem2` を跨いだときに抽選
-    else if (item1.activeSelf && HasCrossedThreshold(previousDistanceToItem1, distanceToItem1, triggerDistanceItem2) && stopper.movemode[(int)machine_number] == 0)
+        else if (item1.activeSelf && HasCrossedThreshold(previousDistanceToItem1, distanceToItem1, triggerDistanceItem2) && stopper.movemode[(int)machine_number] == 0)
         {
             if (Random.value <= item3Probability)
             {
@@ -61,6 +61,7 @@ public class SphereManager2 : MonoBehaviour
                 ScoreManager.Instance.AddMainScore(scoreAmount);
                 stopper.movemode[(int)machine_number] = 10;
                 stopper.bluemode[(int)machine_number] = 2;
+                FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
             }
             else
             {
@@ -74,9 +75,10 @@ public class SphereManager2 : MonoBehaviour
         else if (item3.activeSelf && distanceToItem3 <= triggerDistanceItem1)
         {
             Debug.Log("item3にふれた");
-            ToggleItems(item3,item2);
+            ToggleItems(item3, item2);
             stopper.movemode[(int)machine_number] = 10;
             stopper.bluemode[(int)machine_number] = 3;
+            FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
         }
 
         // 前回の距離を更新
