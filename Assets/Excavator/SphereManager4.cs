@@ -29,8 +29,8 @@ public class SphereManager4 : MonoBehaviour
     public GameObject targetObject;
 
     // 距離のしきい値
-    public float distanceThreshold = 3f; // 触れる距離のしきい値
-    public float initialDistanceThreshold = 5f; // 初期位置の距離しきい値
+    private float distanceThreshold = 3f; // 触れる距離のしきい値
+    private float initialDistanceThreshold = 5f; // 初期位置の距離しきい値
 
     // 移動範囲のオフセット
     //public Vector3 minOffset = new Vector3(-1, -1, -1); // 最小オフセット
@@ -42,7 +42,7 @@ public class SphereManager4 : MonoBehaviour
     private bool isHKeyPressed = false;     // Hキーが押されたかどうか
 
     private float forcedHideTimer = -1f; // Kキーでの強制消去タイマー
-    public float forcedHideDelay = 3f; // Kキー押下後に消えるまでの遅延時間
+    private float forcedHideDelay = 3f; // Kキー押下後に消えるまでの遅延時間
 
     public void Delay(float delay)
     {

@@ -67,7 +67,7 @@ public class SphereManager3 : MonoBehaviour
                 isTriggered = true; // トリガーされたことを記録
 
                 // サブスコアを加算
-                ScoreManager.Instance.AddSubScore(scoreAmount);
+                ScoreManager.Instance.AddSubScore(scoreAmount, (int)machine_number);
 
                 // アイテムをtargetObjectからの相対位置に移動
                 MoveItemToRandomOffset();

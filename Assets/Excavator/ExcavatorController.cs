@@ -17,7 +17,7 @@ public class ExcavatorController : MonoBehaviour
     public float deltaAccel = 0.5F;
     public float maxAccel = 1F;
     public float deltaDirection = 1F;
-    public float machine_number = 1F;
+    public int machine_number = 1;
     
     public bool useHook = false;
     public bool enableRearCameras = true;
@@ -153,7 +153,7 @@ public class ExcavatorController : MonoBehaviour
                 }
                 else if( _excavator_state.state_name == "Waiting" )
                 {
-                    Debug.Log("_excavator_state.state_name == Waiting");
+                //Debug.Log("_excavator_state.state_name == Waiting");
                     _timer_sleep += Time.deltaTime;
 
                     if( _flag_intervene || _timer_sleep > _timer_sleep_max)
@@ -163,10 +163,27 @@ public class ExcavatorController : MonoBehaviour
                         _timer_sleep = 0F;
                     }
                 }
+                if (stopper.boxmode[(int)machine_number] == 2 || stopper.boxmode[(int)machine_number] == 3)
+                {
+                    if (_count_play_data > _play_data_point[1])
+                    {
+                        Debug.Log($"Excavator({(int)machine_number}) pause");
+                        PuasePlayData();
+                        FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
+                    }
+                }
+                if (stopper.boxmode[(int)machine_number] == 4)
+                {
+                    Debug.Log("boxmodeが4");
+                    StartTeachPlay();
+                    Debug.Log($"Excavator({(int)machine_number}) restart");
+                    FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
+                    stopper.boxmode[(int)machine_number] = 0;
+                }
                 if (stopper.movemode[(int)machine_number] == 1)
                 {
                     Debug.Log($"Excavator({(int)machine_number}) pause");
-                    StopPlayData();
+                    PuasePlayData();
                 }
                 if (stopper.movemode[(int)machine_number] == 2)
                 {
@@ -175,12 +192,12 @@ public class ExcavatorController : MonoBehaviour
                     stopper.movemode[(int)machine_number] = 0;
                     Debug.Log($"Excavator({(int)machine_number}) restart");
                 }
-                else if (stopper.movemode[(int)machine_number] == 2)
-                {
-                    //Debug.Log("movemodeが2");
-                    PositionControl();
-                    _state_tp = 0;
-                }
+                //else if (stopper.movemode[(int)machine_number] == 2)
+                //{
+                //Debug.Log("movemodeが2");
+                //PositionControl();
+                //_state_tp = 0;
+                //}
                 else if (stopper.movemode[(int)machine_number] == 10)
                 {
                     //Debug.Log("movemodeが10");
@@ -199,7 +216,7 @@ public class ExcavatorController : MonoBehaviour
                 else if (stopper.bluemode[(int)machine_number] == 3)
                 {
                     GoTomiddlePosition();
-                    Debug.Log("GoTomiddlePosition");
+                    //Debug.Log("GoTomiddlePosition");
                     //if(_count_play_data == 0)
                     //{
                     //    stopper.bluemode = 4;
@@ -221,11 +238,6 @@ public class ExcavatorController : MonoBehaviour
         }
         Debug.Log("movemode = " + stopper.movemode[(int)machine_number] );
         Debug.Log("operation mode ="+ _operation_mode);
-
-        if(stopper.movemode[(int)machine_number] == 3)
-        {
-            
-        }
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -508,15 +520,6 @@ public class ExcavatorController : MonoBehaviour
                     _count_play_data--;
 
             }
-            else if(stopper.bluemode[(int)machine_number] == 2)
-            {
-
-
-            }
-            else if(stopper.bluemode[(int)machine_number] == 3)
-            {
-            
-            }
 
         }
         else
@@ -593,9 +596,9 @@ public class ExcavatorController : MonoBehaviour
         ///--- STEP 4: Turning 2
         else if( _play_data_point[1] <= _count_play_data && _count_play_data < _play_data_point[2] )
         {
-            if(stopper.movemode[(int)machine_number] == 3)
+            if(stopper.boxmode[(int)machine_number] == 1)
             {
-                stopper.movemode[(int)machine_number] = 1;
+                stopper.boxmode[(int)machine_number] = 2;
             }
             else
             {  

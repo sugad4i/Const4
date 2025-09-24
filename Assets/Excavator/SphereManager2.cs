@@ -44,13 +44,12 @@ public class SphereManager2 : MonoBehaviour
         if (distanceToItem2 <= triggerDistanceItem2 && item2.activeSelf)
         {
             ToggleItems(item2, item1);
-            ScoreManager.Instance.AddMainScore(scoreAmount);
+            ScoreManager.Instance.AddMainScore(scoreAmount,machine_number);
         }
         // item1 に触れたら item2 に切り替え
         else if (item1.activeSelf && distanceToItem1 <= triggerDistanceItem1)
         {
             ToggleItems(item1, item2);
-            ScoreManager.Instance.AddMainScore(scoreAmount);
         }
         // `distanceToItem1` が `triggerDistanceItem2` を跨いだときに抽選
         else if (item1.activeSelf && HasCrossedThreshold(previousDistanceToItem1, distanceToItem1, triggerDistanceItem2) && stopper.movemode[(int)machine_number] == 0)
@@ -58,7 +57,6 @@ public class SphereManager2 : MonoBehaviour
             if (Random.value <= item3Probability)
             {
                 ToggleItems(item1, item3);
-                ScoreManager.Instance.AddMainScore(scoreAmount);
                 stopper.movemode[(int)machine_number] = 10;
                 stopper.bluemode[(int)machine_number] = 2;
                 FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
@@ -66,8 +64,6 @@ public class SphereManager2 : MonoBehaviour
             else
             {
                 Debug.Log("item1 は維持される");
-                ScoreManager.Instance.AddBlueScore(scoreAmount);
-                ScoreManager.Instance.AddMainScore(scoreAmount);
                 stopper.movemode[(int)machine_number] = 0;
             }
         }
@@ -78,6 +74,7 @@ public class SphereManager2 : MonoBehaviour
             ToggleItems(item3, item2);
             stopper.movemode[(int)machine_number] = 10;
             stopper.bluemode[(int)machine_number] = 3;
+            ScoreManager.Instance.AddBlueScore(scoreAmount,machine_number);
             FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
         }
 

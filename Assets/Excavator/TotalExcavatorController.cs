@@ -122,7 +122,7 @@ public class TotalExcavatorController : MonoBehaviour
     private ExcavatorController[] _excavator_controller = new ExcavatorController[_number_excavator];
     private ExcavatorState _excavator_state = new ExcavatorState();
     private string[] _name_excavator = { "Excavator1", "Excavator2", "Excavator3" };
-    private int _number_control_excavator = 0;
+    public int _number_control_excavator = 0;
 
     ///--- for Camera Object
     private GameObject _gob_camera_controller;
@@ -206,6 +206,7 @@ public class TotalExcavatorController : MonoBehaviour
     ///--- Update is called once per frame
     void Update()
     {
+
 
         //////////   Change Excavator Operation Mode   /////////////////////////////////////////////////////////////////////////////////////
         ///--- Change Teach and Play Flag
@@ -724,15 +725,15 @@ public class TotalExcavatorController : MonoBehaviour
     }
 
     public void RequestIntervention(int id)
-{
-    if (excavator_state[id] == ExcavatorControlState.AUTO)
     {
-        excavator_state[id] = ExcavatorControlState.WAITING;
-        _waitingQueue.Enqueue(id);
-        Debug.Log($"Excavator {id + 1} is waiting for intervention.");
-        StartNextExcavator();
+        if (excavator_state[id - 1] == ExcavatorControlState.AUTO)
+        {
+            excavator_state[id - 1] = ExcavatorControlState.WAITING;
+            _waitingQueue.Enqueue(id - 1);
+            Debug.Log($"Excavator {id} が介入を要求しました。");
+            StartNextExcavator();
+        }
     }
-}
 
     private void StartNextExcavator()
     {
@@ -741,9 +742,10 @@ public class TotalExcavatorController : MonoBehaviour
             int nextExcavator = _waitingQueue.Dequeue();
             excavator_state[nextExcavator] = ExcavatorControlState.INTERVENING;
             _currentExcavator = nextExcavator;
-
+            _number_control_excavator = nextExcavator;
+            _camera_controller.ChangeControlExcavatorNumber(_number_control_excavator);
             _excavator_controller[_currentExcavator].StartTeachPlay();
-            Debug.Log($"Excavator {_currentExcavator + 1} started intervention.");
+            Debug.Log($"Excavator {_currentExcavator + 1} が介入を開始しました。");
         }
     }
     private void TryStartNextIntervention()
@@ -760,13 +762,13 @@ public class TotalExcavatorController : MonoBehaviour
     }
     public void EndIntervention(int id)
     {
-        if (_currentExcavator == id)
+        if (_currentExcavator == id - 1)
         {
             //_excavator_controller[id].StopTeachPlay();
-            excavator_state[id] = ExcavatorControlState.AUTO;
+            excavator_state[id - 1] = ExcavatorControlState.AUTO;
             _currentExcavator = -1;
 
-            Debug.Log($"Excavator {id + 1} finished intervention.");
+            Debug.Log($"Excavator {id} が介入を終了しました。");
             StartNextExcavator();
         }
     }
@@ -811,7 +813,7 @@ public class TotalExcavatorController : MonoBehaviour
                     _number_control_excavator = 0;
             }
 
-            ///--- Change Cemra and Canvas of Display1
+            ///--- Change Camera and Canvas of Display1
             _camera_controller.ChangeControlExcavatorNumber(_number_control_excavator);
 
             Debug.Log(" Change Control Excavator" + (_number_control_excavator + 1));
@@ -922,5 +924,10 @@ public class TotalExcavatorController : MonoBehaviour
         //         input_events.trackRight = -joystickRightY;
         //     }
         // }
+    }
+    
+    public int GetControlExcavatorNumber()
+    {
+        return _number_control_excavator;
     }
 }
