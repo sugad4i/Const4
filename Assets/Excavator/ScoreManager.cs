@@ -6,7 +6,7 @@ public class ScoreManager : MonoBehaviour
 {
     // シングルトンインスタンス
     public static ScoreManager Instance;
-    public float machine_number = 1F;
+    public int machine_number = 1;
 
     // メインスコアとサブスコアを管理する変数
     private static int[] mainScore = new int[100];
@@ -50,7 +50,8 @@ public class ScoreManager : MonoBehaviour
                 int n = box.hideOnMultiple;
                 if (n > 0 && mainScore[(int)machine_number] % n == 0)
                 {
-                    StartCoroutine(box.HandleObjectAppearance());
+                    //StartCoroutine(box.HandleObjectAppearance());
+                    stopper.boxmode[(int)machine_number] = 6;
                 }
             }
         }
@@ -74,7 +75,27 @@ public class ScoreManager : MonoBehaviour
     public void AddBoxScore(int amount,int machine_number)
     {
         boxScore[(int)machine_number] += amount;
-        //Debug.Log($"機体{machine_number} の現在のBoxスコア: {boxScore[(int)machine_number]}");
+        Debug.Log($"機体{machine_number} の現在のメインスコア: {mainScore[(int)machine_number]}");
+        UpdateMainScoreText();
+        
+        // BoxManagerを探して、そのhideOnMultipleで判定
+        var relocationManagers = FindObjectsOfType<RelocationManager>();
+        foreach (var manager in relocationManagers)
+        {
+            if ((int)manager.machine_number == machine_number)
+            {
+                int n = manager.hideOnMultiple;
+                if (n > 0 && boxScore[(int)machine_number] % n == 0)
+                {
+                    stopper.relocationmode[(int)machine_number] = 1;
+                    stopper.boxmode[(int)machine_number] = 0;
+                }
+                else
+                {
+
+                }
+            }
+        }
     }
 
     // メインスコアを取得するメソッド

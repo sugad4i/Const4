@@ -2,35 +2,35 @@ using System.Collections;
 using UnityEngine;
 using Const;
 
-public class BoxManager : MonoBehaviour
+public class RelocationManager : MonoBehaviour
 {
     public float showInterval = 2f;  // 最小の待機時間
     public int machine_number = 1; // マシン番号（0～99）
     public GameObject[] items;  // 消える/現れるオブジェクト（インスペクタから設定）
     public int hideOnMultiple = 5; // ← Inspectorで指定できる
-    public int scoreAmount = 1;
 
     private void Start()
     {
         foreach (var item in items)
         {
-            item.SetActive(true);
+            item.SetActive(false);
         }
         Debug.Log("setActive true");
-        stopper.boxmode[(int)machine_number] = 0;  // 初期状態でアイテム表示
+        stopper.relocationmode[(int)machine_number] = 0;  // 初期状態でアイテム表示
         //StartCoroutine(HandleObjectAppearance());  // コルーチンを開始
     }
 
     private void Update()
     {
-        //Debug.Log("機体" + machine_number + "のboxmode: " + stopper.boxmode[(int)machine_number]);
-        if (stopper.boxmode[(int)machine_number] == 3)
+        //Debug.Log("機体" + machine_number + "のrelocationmode: " + stopper.relocationmode[(int)machine_number]);
+        if (stopper.relocationmode[(int)machine_number] == 3)
         {
             if (machine_number - 1 == FindObjectOfType<TotalExcavatorController>().GetControlExcavatorNumber())
             {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    stopper.boxmode[(int)machine_number] = 4;
+                    stopper.relocationmode[(int)machine_number] = 5;
+                    FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
                 }
             }
         }
@@ -39,11 +39,14 @@ public class BoxManager : MonoBehaviour
 
     public IEnumerator HandleObjectAppearance()
     {
-        ScoreManager.Instance.AddBoxScore(scoreAmount,machine_number);
-        Debug.Log("HandleObjectAppearance");
-        HideItems();
-        yield return new WaitForSeconds(showInterval); // 一定時間待つ
-        ShowItems(); // 再表示
+        if (stopper.relocationmode[(int)machine_number] == 2)
+        {
+            Debug.Log("HandleObjectAppearance");
+            ShowItems();
+            yield return new WaitForSeconds(showInterval); // 一定時間待つ
+            HideItems(); 
+            
+        }
     }
 
     // アイテムを全て表示するメソッド
@@ -53,8 +56,7 @@ public class BoxManager : MonoBehaviour
         {
             item.SetActive(true);
         }
-        stopper.boxmode[(int)machine_number] = 3;  // アイテム表示時にモードを変更
-        FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
+        stopper.relocationmode[(int)machine_number] = 3;  // アイテム表示時にモードを変更
         //FindObjectOfType<TotalExcavatorController>().RequestIntervention((int)machine_number);
     }
 
@@ -65,5 +67,7 @@ public class BoxManager : MonoBehaviour
         {
             item.SetActive(false);
         }
+        stopper.relocationmode[(int)machine_number] = 4;  // アイテム非表示時にモードを変更
+        FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
     }
 }
