@@ -47,7 +47,7 @@ public class ScoreManager : MonoBehaviour
         {
             if ((int)box.machine_number == machine_number)
             {
-                int n = box.hideOnMultiple;
+                int n = box.hidenumber;
                 if (n > 0 && mainScore[(int)machine_number] % n == 0)
                 {
                     //StartCoroutine(box.HandleObjectAppearance());
@@ -75,39 +75,29 @@ public class ScoreManager : MonoBehaviour
     public void AddBoxScore(int amount,int machine_number)
     {
         boxScore[(int)machine_number] += amount;
-        Debug.Log($"機体{machine_number} の現在のメインスコア: {mainScore[(int)machine_number]}");
+        Debug.Log($"機体{machine_number} の現在のBoxスコア: {mainScore[(int)machine_number]}");
         UpdateMainScoreText();
         
         // BoxManagerを探して、そのhideOnMultipleで判定
-        var relocationManagers = FindObjectsOfType<RelocationManager>();
-        foreach (var manager in relocationManagers)
-        {
-            if ((int)manager.machine_number == machine_number)
-            {
-                int n = manager.hideOnMultiple;
-                if (n > 0 && boxScore[(int)machine_number] % n == 0)
-                {
-                    stopper.relocationmode[(int)machine_number] = 1;
-                    stopper.boxmode[(int)machine_number] = 0;
-                }
-                else
-                {
+        //var relocationManagers = FindObjectsOfType<RelocationManager>();
 
-                }
-            }
-        }
     }
 
     // メインスコアを取得するメソッド
-    public int GetMainScore()
+    public int GetMainScore(int machine_number)
     {
         return mainScore[(int)machine_number];
     }
 
     // サブスコアを取得するメソッド
-    public int GetSubScore()
+    public int GetSubScore(int machine_number)
     {
         return subScore[(int)machine_number];
+    }
+
+    public int GetBoxScore(int machine_number)
+    {
+        return boxScore[(int)machine_number];
     }
 
     // メインスコアのテキストを更新

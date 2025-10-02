@@ -222,7 +222,7 @@ public class TotalExcavatorController : MonoBehaviour
                 _excavator_controller[i].SetOperationMode(_operation_mode);
                 _excavator_controller[i].SetControlMode(_control_mode);
             }
-            Debug.Log(" Change Normal Control Mode.");
+            //Debug.Log(" Change Normal Control Mode.");
         }
 
         else if (Input.GetKey(KeyCode.W))
@@ -240,7 +240,7 @@ public class TotalExcavatorController : MonoBehaviour
 
             flag_start_teach = flag_teach_init = false;
 
-            Debug.Log(" Change Teach Mode.");
+            //Debug.Log(" Change Teach Mode.");
         }
         else if (Input.GetKey(KeyCode.E))
         {
@@ -255,7 +255,7 @@ public class TotalExcavatorController : MonoBehaviour
                 _excavator_controller[i].SetControlMode(_control_mode);
             }
 
-            Debug.Log(" Change Play Mode.");
+            //Debug.Log(" Change Play Mode.");
         }
         else if (Input.GetKey(KeyCode.R))
         {
@@ -270,7 +270,7 @@ public class TotalExcavatorController : MonoBehaviour
                 _excavator_controller[i].SetControlMode(_control_mode);
             }
 
-            Debug.Log(" Change Play and Intervine Mode.");
+            //Debug.Log(" Change Play and Intervine Mode.");
         }
         else if (Input.GetKey(KeyCode.T))
         {
@@ -285,7 +285,7 @@ public class TotalExcavatorController : MonoBehaviour
                 _excavator_controller[i].SetControlMode(_control_mode);
             }
 
-            Debug.Log(" Change Experimet Mode.");
+            //Debug.Log(" Change Experimet Mode.");
         }
         else if (Input.GetKey(KeyCode.Y))
         {
@@ -300,7 +300,7 @@ public class TotalExcavatorController : MonoBehaviour
                 _excavator_controller[i].SetControlMode(_control_mode);
             }
 
-            Debug.Log(" Change FIFO Mode.");
+            //Debug.Log(" Change FIFO Mode.");
         }
 
         //////////   Control in Each Operation Mode   /////////////////////////////////////////////////////////////////////////////////////
@@ -333,7 +333,7 @@ public class TotalExcavatorController : MonoBehaviour
         else if (_operation_mode == 5)
         {
             FIFOMode();
-            Debug.Log("FIFOMODE");
+            //Debug.Log("FIFOMODE");
         }
 
         int intervention = InterventionMode();
@@ -350,12 +350,12 @@ public class TotalExcavatorController : MonoBehaviour
         {
             if (stopper.movemode[i] != 0 || stopper.bluemode[i] != 0)
             {
-                Debug.Log("介入中");
+                //Debug.Log("介入中");
                 return 1; // 1台でも0以外なら介入モード
 
             }
         }
-        Debug.Log("自動運転中");
+        //Debug.Log("自動運転中");
         return 0; // 全て0なら通常モード
     }
 
@@ -381,7 +381,7 @@ public class TotalExcavatorController : MonoBehaviour
         {
             CalculateJointControlCommandByGamepad();
 
-            // Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
+            // //Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
             for (int i = 0; i < _number_excavator; i++)
             {
                 if (i == _number_control_excavator)
@@ -397,7 +397,7 @@ public class TotalExcavatorController : MonoBehaviour
         else if (_control_mode == 1)
         {
             CalculatePositionControlCommandByGamepad();
-            // Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
+            // //Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
             for (int i = 0; i < _number_excavator; i++)
             {
                 if (i == _number_control_excavator)
@@ -422,13 +422,13 @@ public class TotalExcavatorController : MonoBehaviour
             _timer_laps = 0F;
             flag_start_teach = true;
             _excavator_controller[_number_control_excavator].StartTeachPlay();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Save Excavator State Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Save Excavator State Data.");
         }
         else if (flag_start_teach == true && Input.GetKey(KeyCode.F))
         {
             flag_start_teach = flag_teach_init = false;
             _excavator_controller[_number_control_excavator].StopTeachPlay();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Stop Save Excavator State Data. Time:=" + _timer_laps);
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Stop Save Excavator State Data. Time:=" + _timer_laps);
         }
 
         ///--- Save Data
@@ -452,7 +452,7 @@ public class TotalExcavatorController : MonoBehaviour
 
             ///--- Update Excavator State
             _excavator_state = _excavator_controller[_number_control_excavator].GetExcavatorState();
-            Debug.Log("  _excavator_state.swing:=" + _excavator_state.swing + " _input_swing:=");
+            //Debug.Log("  _excavator_state.swing:=" + _excavator_state.swing + " _input_swing:=");
 
             ///--- Save Excavator State Data
             StreamWriter sw = new StreamWriter(@"Assets/Excavator/TrajectoryData/Teach_" + file_name, true, Encoding.GetEncoding("Shift_JIS"));
@@ -487,25 +487,25 @@ public class TotalExcavatorController : MonoBehaviour
         if (Input.GetKey(KeyCode.A))
         {
             _excavator_controller[_number_control_excavator].SetInitialPosition();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Play Excavator Data.");
         }
         ///--- Start Play Data
         if (Input.GetKey(KeyCode.S))
         {
             _excavator_controller[_number_control_excavator].StartTeachPlay();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Play Excavator Data.");
         }
         ///--- Pause Play Data
         else if (Input.GetKey(KeyCode.D))
         {
             _excavator_controller[_number_control_excavator].PuasePlayData();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
         }
         ///--- Stop Play Data
         else if (Input.GetKey(KeyCode.F))
         {
             _excavator_controller[_number_control_excavator].StopPlayData();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Stop Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Stop Play Excavator Data.");
         }
     }
 
@@ -524,25 +524,25 @@ public class TotalExcavatorController : MonoBehaviour
         if (Input.GetKey(KeyCode.S))
         {
             _excavator_controller[_number_control_excavator].StartTeachPlay();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Play Excavator Data.");
         }
         ///--- Pause Play Data
         else if (Input.GetKey(KeyCode.D))
         {
             _excavator_controller[_number_control_excavator].PuasePlayData();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
         }
         ///--- Stop Play Data
         else if (Input.GetKey(KeyCode.F))
         {
             _excavator_controller[_number_control_excavator].StopPlayData();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Stop Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Stop Play Excavator Data.");
         }
         ///--- Start Intervene
         if (Input.GetKeyDown("joystick button 7")) ///--- Push Joystick Start Buttun
         {
             _excavator_controller[_number_control_excavator].SetFlagIntervene();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Intervene Excavator.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Intervene Excavator.");
         }
 
         ///--- Set Intervene Input Value
@@ -570,7 +570,7 @@ public class TotalExcavatorController : MonoBehaviour
             for (int i = 0; i < _number_excavator; i++)
             {
                 _excavator_controller[i].SetInitialPosition();
-                Debug.Log(" Excavator" + (i + 1) + " Start Play Excavator Data.");
+                //Debug.Log(" Excavator" + (i + 1) + " Start Play Excavator Data.");
             }
         }
         ///--- Start Play Data
@@ -579,14 +579,14 @@ public class TotalExcavatorController : MonoBehaviour
             for (int i = 0; i < _number_excavator; i++)
             {
                 _excavator_controller[i].StartTeachPlay();
-                Debug.Log(" Excavator" + (i + 1) + " Start Play Excavator Data.");
+                //Debug.Log(" Excavator" + (i + 1) + " Start Play Excavator Data.");
             }
         }
         ///--- Pause Play Data
         else if (Input.GetKey(KeyCode.D))
         {
             _excavator_controller[_number_control_excavator].PuasePlayData();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
 
         }
         ///--- Stop Play Data
@@ -595,7 +595,7 @@ public class TotalExcavatorController : MonoBehaviour
             for (int i = 0; i < _number_excavator; i++)
             {
                 _excavator_controller[i].StopPlayData();
-                Debug.Log(" Excavator" + (i + 1) + " Stop Play Excavator Data.");
+                //Debug.Log(" Excavator" + (i + 1) + " Stop Play Excavator Data.");
             }
         }
 
@@ -603,17 +603,17 @@ public class TotalExcavatorController : MonoBehaviour
         if (Input.GetKey(KeyCode.Z))
         {
             _excavator_controller[0].StartTeachPlay();
-            Debug.Log(" Excavator" + (1) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (1) + " Start Play Excavator Data.");
         }
         if (Input.GetKey(KeyCode.X))
         {
             _excavator_controller[1].StartTeachPlay();
-            Debug.Log(" Excavator" + (2) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (2) + " Start Play Excavator Data.");
         }
         if (Input.GetKey(KeyCode.V))
         {
             _excavator_controller[2].StartTeachPlay();
-            Debug.Log(" Excavator" + (3) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (3) + " Start Play Excavator Data.");
         }
 
 
@@ -621,7 +621,7 @@ public class TotalExcavatorController : MonoBehaviour
         if (Input.GetKeyDown("joystick button 7")) ///--- Push Joystick Start Buttun
         {
             _excavator_controller[_number_control_excavator].SetFlagIntervene();
-            Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Intervene Excavator.");
+            //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Start Intervene Excavator.");
         }
 
         ///--- Set Intervene Input Value
@@ -648,7 +648,7 @@ public class TotalExcavatorController : MonoBehaviour
             for (int i = 0; i < _number_excavator; i++)
             {
                 _excavator_controller[i].SetInitialPosition();
-                Debug.Log(" Excavator" + (i + 1) + " Set initial position.");
+                //Debug.Log(" Excavator" + (i + 1) + " Set initial position.");
             }
         }
         ///--- Start Play Data
@@ -657,24 +657,24 @@ public class TotalExcavatorController : MonoBehaviour
             for (int i = 0; i < _number_excavator; i++)
             {
                 _excavator_controller[i].StartTeachPlay();
-                Debug.Log(" Excavator" + (i + 1) + " Start Play Excavator Data.");
+                //Debug.Log(" Excavator" + (i + 1) + " Start Play Excavator Data.");
             }
 
         }
         if (Input.GetKey(KeyCode.Z))
         {
             _excavator_controller[0].StartTeachPlay();
-            Debug.Log(" Excavator" + (1) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (1) + " Start Play Excavator Data.");
         }
         if (Input.GetKey(KeyCode.X))
         {
             _excavator_controller[1].StartTeachPlay();
-            Debug.Log(" Excavator" + (2) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (2) + " Start Play Excavator Data.");
         }
         if (Input.GetKey(KeyCode.V))
         {
             _excavator_controller[2].StartTeachPlay();
-            Debug.Log(" Excavator" + (3) + " Start Play Excavator Data.");
+            //Debug.Log(" Excavator" + (3) + " Start Play Excavator Data.");
         }
 
         ///--- Change Control Mode
@@ -694,7 +694,7 @@ public class TotalExcavatorController : MonoBehaviour
         {
             CalculateJointControlCommandByGamepad();
 
-            // Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
+            // //Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
             for (int i = 0; i < _number_excavator; i++)
             {
                 if (i == _number_control_excavator)
@@ -710,7 +710,7 @@ public class TotalExcavatorController : MonoBehaviour
         else if (_control_mode == 1)
         {
             CalculatePositionControlCommandByGamepad();
-            // Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
+            // //Debug.Log( "0 _num_ce:= "+_number_control_excavator+" input_command:="+input_command.delta_swing+" ex[0].delta_swing:="+input_command_ex[0].delta_swing+" ex[1].delta_swing:="+input_command_ex[1].delta_swing );
             for (int i = 0; i < _number_excavator; i++)
             {
                 if (i == _number_control_excavator)
@@ -730,7 +730,7 @@ public class TotalExcavatorController : MonoBehaviour
         {
             excavator_state[id - 1] = ExcavatorControlState.WAITING;
             _waitingQueue.Enqueue(id - 1);
-            Debug.Log($"Excavator {id} が介入を要求しました。");
+            //Debug.Log($"Excavator {id} が介入を要求しました。");
             StartNextExcavator();
         }
     }
@@ -745,7 +745,7 @@ public class TotalExcavatorController : MonoBehaviour
             _number_control_excavator = nextExcavator;
             _camera_controller.ChangeControlExcavatorNumber(_number_control_excavator);
             _excavator_controller[_currentExcavator].StartTeachPlay();
-            Debug.Log($"Excavator {_currentExcavator + 1} が介入を開始しました。");
+            //Debug.Log($"Excavator {_currentExcavator + 1} が介入を開始しました。");
         }
     }
     private void TryStartNextIntervention()
@@ -757,7 +757,7 @@ public class TotalExcavatorController : MonoBehaviour
             _currentExcavator = next;
 
             //_excavator_controller[next].StartTeachPlay();
-            Debug.Log($"Excavator {next + 1} started intervention.");
+            //Debug.Log($"Excavator {next + 1} started intervention.");
         }
     }
     public void EndIntervention(int id)
@@ -768,7 +768,7 @@ public class TotalExcavatorController : MonoBehaviour
             excavator_state[id - 1] = ExcavatorControlState.AUTO;
             _currentExcavator = -1;
 
-            Debug.Log($"Excavator {id} が介入を終了しました。");
+            //Debug.Log($"Excavator {id} が介入を終了しました。");
             StartNextExcavator();
         }
     }
@@ -780,7 +780,7 @@ public class TotalExcavatorController : MonoBehaviour
         {
             queueStatus += "Excavator " + (exc + 1) + " ";
         }
-        Debug.Log(queueStatus);
+        //Debug.Log(queueStatus);
     }
     //////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////
@@ -816,7 +816,7 @@ public class TotalExcavatorController : MonoBehaviour
             ///--- Change Camera and Canvas of Display1
             _camera_controller.ChangeControlExcavatorNumber(_number_control_excavator);
 
-            Debug.Log(" Change Control Excavator" + (_number_control_excavator + 1));
+            //Debug.Log(" Change Control Excavator" + (_number_control_excavator + 1));
         }
     }
 
@@ -824,7 +824,7 @@ public class TotalExcavatorController : MonoBehaviour
     {
         if (Input.GetKeyDown("joystick button 4"))
             _excavator_controller[_number_control_excavator].ChangeCameraMode();
-        Debug.Log(" Change Camera Mode.");
+        //Debug.Log(" Change Camera Mode.");
     }
 
     private void CalculateJointControlCommandByGamepad()

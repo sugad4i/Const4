@@ -44,7 +44,8 @@ public class SphereManager2 : MonoBehaviour
         if (distanceToItem2 <= triggerDistanceItem2 && item2.activeSelf)
         {
             ToggleItems(item2, item1);
-            ScoreManager.Instance.AddMainScore(scoreAmount,machine_number);
+            ScoreManager.Instance.AddMainScore(scoreAmount, machine_number);
+            ScoreManager.Instance.AddBoxScore(scoreAmount, machine_number);
         }
         // item1 に触れたら item2 に切り替え
         else if (item1.activeSelf && distanceToItem1 <= triggerDistanceItem1)
@@ -74,7 +75,7 @@ public class SphereManager2 : MonoBehaviour
             ToggleItems(item3, item2);
             stopper.movemode[(int)machine_number] = 10;
             stopper.bluemode[(int)machine_number] = 3;
-            ScoreManager.Instance.AddBlueScore(scoreAmount,machine_number);
+            ScoreManager.Instance.AddBlueScore(scoreAmount, machine_number);
             FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
         }
 
