@@ -11,64 +11,45 @@ public class SphereManager4 : MonoBehaviour
     public float minDisplayInterval = 2f;  // 最小の待機時間
     public float maxDisplayInterval = 10f; // 最大の待機時間
     public float visibleDuration = 5f;      // オブジェクトが表示される時間
-    public int scoreAmount = 1;             // サブスコアを加算する量
+    int scoreAmount = 1;             // サブスコアを加算する量
     public int machine_number = 1; // マシン番号（0～99）
-    public Vector3 relativeMove1 = new Vector3(1,0,0); // 相対座標の移動量
-    public Vector3 relativeMove2 = new Vector3(1,0,0); // 相対座標の移動量
-    public float moveSpeed = 1.0f; // 移動速度（単位: ユニット/秒）
+    public Vector3 relativeMove = new Vector3(1,0,0); // 相対座標の移動量
+    float moveSpeed = 2.0f; // 移動速度（単位: ユニット/秒）
+
 
     private Vector3 targetPosition; // 計算された目的地
     private bool isMoving1 = false; // 移動1フラグ
-    private bool isMoving2 = false; // 移動2フラグ
-
-
     // 消える/現れるアイテム（インスペクタから設定）
     public GameObject item;
-
-    // 移動する対象のオブジェクト（インスペクタから設定）
-    public GameObject targetObject;
-
-    // 距離のしきい値
-    private float distanceThreshold = 3f; // 触れる距離のしきい値
-    private float initialDistanceThreshold = 5f; // 初期位置の距離しきい値
-
-    // 移動範囲のオフセット
-    //public Vector3 minOffset = new Vector3(-1, -1, -1); // 最小オフセット
-    //public Vector3 maxOffset = new Vector3(1, 1, 1);    // 最大オフセット
-
     private bool isTriggered = false;      // トリガーされたかどうかを追跡
     private Vector3 initialPosition;        // アイテムの初期位置を保存
-    private float displayTimer;              // アイテムの表示までのタイマー
+    float displayTimer = 0f;          // アイテムの表示までのタイマー
+    private float FirstDisplayTimer = 10f;              // アイテムの表示までのタイマー
     private bool isHKeyPressed = false;     // Hキーが押されたかどうか
 
     private float forcedHideTimer = -1f; // Kキーでの強制消去タイマー
     private float forcedHideDelay = 3f; // Kキー押下後に消えるまでの遅延時間
 
-    public void Delay(float delay)
+    public void Delay(float delay, int machine_number)
     {
-        StartCoroutine(DelayedStartRecording(delay));
+        StartCoroutine(DelayedStartRecording(delay, machine_number));
     }
 
-    private IEnumerator DelayedStartRecording(float delay)
+    private IEnumerator DelayedStartRecording(float delay, int machine_number)
     {
         yield return new WaitForSeconds(delay); // 指定時間待機
-
-        stopper.movemode[(int)machine_number] = 1; // movemodeを更新
+        stopper.manmode[(int)machine_number] = 1; // manmodeを更新
+        FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
         item.SetActive(true); // アイテムをアクティブ化
         StartMove1();
     }
 
     private void StartMove1()
     {
-        targetPosition = initialPosition + relativeMove1; // 移動1の目的地
+        targetPosition = initialPosition + relativeMove; // 移動1の目的地
         isMoving1 = true;
     }
 
-    private void StartMove2()
-    {
-        targetPosition = initialPosition + relativeMove1 + relativeMove2; // 移動2の目的地
-        isMoving2 = true;
-    }
 
     
 
@@ -81,7 +62,7 @@ public class SphereManager4 : MonoBehaviour
         initialPosition = item.transform.position;
 
         // タイマーをリセット
-        displayTimer = -5f;
+        displayTimer = -1 * FirstDisplayTimer;
     }
 
     private void Update()
@@ -91,10 +72,10 @@ public class SphereManager4 : MonoBehaviour
         {
             if (!item.activeSelf)
             {
-                stopper.movemode[(int)machine_number] = 2;
+                stopper.manmode[(int)machine_number] = 2;
                 isHKeyPressed = true; // Hキーが押されたことを記録
                 displayTimer = 0f; // Hキーが押された時点でタイマーをリセット
-                Debug.Log("Hキーが押され、球が出ていないためmovemode = 2に設定しました。");
+                Debug.Log("Hキーが押され、球が出ていないためmanmode = 2に設定しました。");
                 FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
             }
         }
@@ -111,21 +92,21 @@ public class SphereManager4 : MonoBehaviour
             forcedHideTimer -= Time.deltaTime;
             if (forcedHideTimer <= 0)
             {
-                HideItem();
+                HideItem(machine_number);
                 forcedHideTimer = -1f; // タイマーをリセット
             }
         }
 
-        // アイテムが表示されるまでのタイマーをカウント
-        if (!item.activeSelf) // Hキーが押された後にカウントを開始
+        if (!item.activeSelf)
         {
             displayTimer += Time.deltaTime;
 
-            // `movemode == 0` を条件に追加してアイテムの表示を制御
             if (stopper.movemode[(int)machine_number] == 0 &&
-                displayTimer >= Random.Range(minDisplayInterval, maxDisplayInterval) )
+            stopper.boxmode[(int)machine_number] == 0 &&
+            stopper.bluemode[(int)machine_number] == 0 &&
+            displayTimer >= Random.Range(minDisplayInterval, maxDisplayInterval))
             {
-                ShowItem();
+                ShowItem(machine_number);
             }
         }
 
@@ -136,17 +117,6 @@ public class SphereManager4 : MonoBehaviour
             if (Vector3.Distance(item.transform.position, targetPosition) < 0.01f)
             {
                 isMoving1 = false;
-                StartMove2(); // 移動2を開始
-            }
-        }
-
-        // 移動2を処理
-        if (isMoving2)
-        {
-            item.transform.position = Vector3.MoveTowards(item.transform.position, targetPosition, moveSpeed * Time.deltaTime);
-            if (Vector3.Distance(item.transform.position, targetPosition) < 0.01f)
-            {
-                isMoving2 = false;
                 OnMoveComplete(); // 全移動完了
             }
         }
@@ -158,22 +128,17 @@ public class SphereManager4 : MonoBehaviour
         Debug.Log("全ての移動完了");
     }
 
-    private void ShowItem()
+    private void ShowItem(int machine_number)
     {
-        FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
-        // アイテムを表示し、トリガーフラグをリセット
         isTriggered = false;
         stopper.capturemode[(int)machine_number] = 1;
-        Debug.Log("movemode = " + stopper.movemode);   
-
-        Delay(2.0f);
-
-        Debug.Log("delay");
-        // 5秒後にアイテムを自動で消す
+        // Debug.Log("manmode = " + stopper.manmode);
+        Delay(2.0f, machine_number);
+        // Debug.Log("delay");
         Invoke("HideItem", visibleDuration);
     }
 
-    private void HideItem()
+    private void HideItem(int machine_number)
     {
         // アイテムが触れられていなければ、非アクティブにする
         if (!isTriggered)
@@ -184,26 +149,8 @@ public class SphereManager4 : MonoBehaviour
         // タイマーをリセット
         displayTimer = 0f;
         isHKeyPressed = false; // Hキーが押された後は、次のタイマー開始までリセット
-        stopper.movemode[(int)machine_number] = 4;
+        stopper.manmode[(int)machine_number] = 4;
         stopper.capturemode[(int)machine_number] = 0;
     }
 
-    //private void MoveItemToRandomOffset()
-    //{
-        // 相対的にランダムなオフセットを計算
-    //    Vector3 randomOffset = new Vector3(
-    //        Random.Range(minOffset.x, maxOffset.x),
-    //        Random.Range(minOffset.y, maxOffset.y),
-    //        Random.Range(minOffset.z, maxOffset.z)
-    //    );
-
-        // 初期位置にオフセットを追加して新しい位置を設定
-    //    item.transform.position = initialPosition + randomOffset;
-    //}
-
-    //private void ScheduleNextAppearance()
-    //{
-        // 次の表示をランダムな時間後に再スケジュール
-    //    displayTimer = 0f; // タイマーをリセット
-    //}
 }

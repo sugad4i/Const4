@@ -10,7 +10,7 @@ public class DashcamManager : MonoBehaviour
     public RawImage playbackScreen; // 再生用のUI (RawImage)
     public int frameRate = 30; // 録画と再生のフレームレート
 
-    private List<Texture2D> recordedFrames = new List<Texture2D>(); // 保存するフレームのリスト
+    private Dictionary<int, List<Texture2D>> recordedFrames = new Dictionary<int, List<Texture2D>>(); // 各機体のフレームを保存
     private bool isRecording = false; // 録画中フラグ
     private bool isPlaying = false; // 再生中フラグ
     private float captureInterval; // フレームキャプチャ間隔
@@ -18,21 +18,20 @@ public class DashcamManager : MonoBehaviour
     private int currentPlaybackFrame = 0; // 現在の再生フレーム
     private float timeSinceLastFrame = 0f; // 前の再生フレームからの経過時間
 
-    public float machine_number = 1f;    
+    public int machine_number = 1;    
     public GameObject playbackScreenParent; // RawImageを持つ親オブジェクト
     public Color borderColor = Color.black; // 枠線の色
     public float borderWidth = 5f; // 枠線の太さ
 
-
     public void Delay(float delay)
     {
-        StartCoroutine(DelayedStartRecording(delay));
+        StartCoroutine(DelayedStartRecording(delay, machine_number));
     }
 
-    private IEnumerator DelayedStartRecording(float delay)
+    private IEnumerator DelayedStartRecording(float delay, int machine_number)
     {
         yield return new WaitForSeconds(delay); // 指定時間待機
-        StopRecording(); // 待機後に録画停止
+        StopRecording(machine_number); // 待機後に録画停止
     }
 
     void Start()
@@ -49,7 +48,7 @@ public class DashcamManager : MonoBehaviour
             timeSinceLastCapture += Time.deltaTime;
             if (timeSinceLastCapture >= captureInterval)
             {
-                CaptureFrame();
+                CaptureFrame(machine_number);
                 timeSinceLastCapture = 0f; // 経過時間をリセット
             }
         }
@@ -60,47 +59,51 @@ public class DashcamManager : MonoBehaviour
             timeSinceLastFrame += Time.deltaTime;
             if (timeSinceLastFrame >= captureInterval)
             {
-                PlayFrame();
+                PlayFrame(machine_number);
                 timeSinceLastFrame = 0f;
             }
         }
 
-        if (stopper.capturemode[(int)machine_number] == 1 && !isRecording) // 録画開始
+        if (stopper.capturemode[machine_number] == 1 && !isRecording) // 録画開始
         {
-            StartRecording();
+            StartRecording(machine_number);
         }
 
-        if (stopper.movemode[(int)machine_number] == 4) // 録画停止
+        if (stopper.manmode[machine_number] == 4) // 録画停止
         {
-            Delay(5.0f); // 15秒待って録画を停止
+            Delay(5.0f); // 5秒待って録画を停止
         }
 
         if (Input.GetKeyDown(KeyCode.P)) // Pキーで再生開始
         {
-            if (!isPlaying && recordedFrames.Count > 0)
+            if (!isPlaying && recordedFrames.ContainsKey(machine_number) && recordedFrames[machine_number].Count > 0)
             {
-                StartPlayback();
+                StartPlayback(machine_number);
             }
         }
     }
 
     // 録画開始
-    private void StartRecording()
+    private void StartRecording(int machine_number)
     {
         isRecording = true;
-        recordedFrames.Clear(); // 古いフレームをクリア
-        Debug.Log("Recording started.");
+        if (!recordedFrames.ContainsKey(machine_number))
+        {
+            recordedFrames[machine_number] = new List<Texture2D>(); // 新しい機体のリストを作成
+        }
+        recordedFrames[machine_number].Clear(); // 古いフレームをクリア
+        Debug.Log($"Recording started for machine {machine_number}.");
     }
 
     // 録画停止
-    private void StopRecording()
+    private void StopRecording(int machine_number)
     {
         isRecording = false;
-        Debug.Log($"Recording stopped. Frames recorded: {recordedFrames.Count}");
+        Debug.Log($"Recording stopped for machine {machine_number}. Frames recorded: {recordedFrames[machine_number].Count}");
     }
 
     // フレームをキャプチャ
-    private void CaptureFrame()
+    private void CaptureFrame(int machine_number)
     {
         RenderTexture rt = new RenderTexture(Screen.width, Screen.height, 24);
         recordingCamera.targetTexture = rt;
@@ -111,7 +114,11 @@ public class DashcamManager : MonoBehaviour
         frame.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
         frame.Apply();
 
-        recordedFrames.Add(frame);
+        // 機体ごとのフレームリストに追加
+        if (recordedFrames.ContainsKey(machine_number))
+        {
+            recordedFrames[machine_number].Add(frame);
+        }
 
         recordingCamera.targetTexture = null;
         RenderTexture.active = null;
@@ -119,20 +126,20 @@ public class DashcamManager : MonoBehaviour
     }
 
     // 再生開始
-    private void StartPlayback()
+    private void StartPlayback(int machine_number)
     {
         isPlaying = true;
         currentPlaybackFrame = 0;
         playbackScreen.gameObject.SetActive(true); // 再生画面を表示
-        Debug.Log("Playback started.");
+        Debug.Log($"Playback started for machine {machine_number}.");
     }
 
     // フレーム再生
-    private void PlayFrame()
+    private void PlayFrame(int machine_number)
     {
-        if (currentPlaybackFrame < recordedFrames.Count)
+        if (currentPlaybackFrame < recordedFrames[machine_number].Count)
         {
-        playbackScreen.texture = recordedFrames[currentPlaybackFrame];
+            playbackScreen.texture = recordedFrames[machine_number][currentPlaybackFrame];
             currentPlaybackFrame++;
         }
         else
@@ -142,7 +149,8 @@ public class DashcamManager : MonoBehaviour
             Debug.Log("Playback finished.");
         }
     }
-        // 親オブジェクトに枠線を追加
+
+    // 親オブジェクトに枠線を追加
     private void AddBorderToPlaybackScreen()
     {
         // 親オブジェクトにImageコンポーネントを追加して枠線を設定

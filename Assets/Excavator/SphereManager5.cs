@@ -45,16 +45,6 @@ public class SphereManager5 : MonoBehaviour
     public float forcedHideDelay = 3f; // Kキー押下後に消えるまでの遅延時間
 
 
-
-    private IEnumerator DelayedStartRecording(float delay)
-    {
-        yield return new WaitForSeconds(delay); // 指定時間待機
-
-        stopper.movemode[(int)machine_number] = 1; // movemodeを更新
-        item.SetActive(true); // アイテムをアクティブ化
-        StartMove1();
-    }
-
     private void StartMove1()
     {
         targetPosition = initialPosition + relativeMove1; // 移動1の目的地
@@ -88,10 +78,10 @@ public class SphereManager5 : MonoBehaviour
         {
             if (!item.activeSelf)
             {
-                stopper.movemode[(int)machine_number] = 2;
+                stopper.manmode[(int)machine_number] = 2;
                 isHKeyPressed = true; // Hキーが押されたことを記録
                 displayTimer = 0f; // Hキーが押された時点でタイマーをリセット
-                Debug.Log("Hキーが押され、球が出ていないためmovemode = 2に設定しました。");
+                Debug.Log("Hキーが押され、球が出ていないためmanmode = 2に設定しました。");
                 FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
             }
         }
@@ -118,8 +108,8 @@ public class SphereManager5 : MonoBehaviour
         {
             displayTimer += Time.deltaTime;
 
-            // `movemode == 0` を条件に追加してアイテムの表示を制御
-            if (stopper.movemode[(int)machine_number] == 0 &&
+            // `manmode == 0` を条件に追加してアイテムの表示を制御
+            if (stopper.manmode[(int)machine_number] == 0 &&
                 displayTimer >= Random.Range(minDisplayInterval, maxDisplayInterval) )
             {
                 ShowItem();
@@ -161,8 +151,7 @@ public class SphereManager5 : MonoBehaviour
         // アイテムを表示し、トリガーフラグをリセット
         isTriggered = false;
         stopper.capturemode[(int)machine_number] = 1;
-        Debug.Log("movemode = " + stopper.movemode);   
-        // 5秒後にアイテムを自動で消す
+        Debug.Log("manmode = " + stopper.manmode);   
         Invoke("HideItem", visibleDuration);
     }
 
@@ -177,7 +166,7 @@ public class SphereManager5 : MonoBehaviour
         // タイマーをリセット
         displayTimer = 0f;
         isHKeyPressed = false; // Hキーが押された後は、次のタイマー開始までリセット
-        stopper.movemode[(int)machine_number] = 4;
+        stopper.manmode[(int)machine_number] = 4;
         stopper.capturemode[(int)machine_number] = 0;
     }
 

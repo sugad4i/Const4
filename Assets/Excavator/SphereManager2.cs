@@ -45,7 +45,7 @@ public class SphereManager2 : MonoBehaviour
         {
             ToggleItems(item2, item1);
             ScoreManager.Instance.AddMainScore(scoreAmount, machine_number);
-            ScoreManager.Instance.AddBoxScore(scoreAmount, machine_number);
+            //ScoreManager.Instance.AddBoxScore(scoreAmount, machine_number);
         }
         // item1 に触れたら item2 に切り替え
         else if (item1.activeSelf && distanceToItem1 <= triggerDistanceItem1)

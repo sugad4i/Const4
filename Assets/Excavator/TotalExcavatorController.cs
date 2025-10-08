@@ -498,7 +498,7 @@ public class TotalExcavatorController : MonoBehaviour
         ///--- Pause Play Data
         else if (Input.GetKey(KeyCode.D))
         {
-            _excavator_controller[_number_control_excavator].PuasePlayData();
+            _excavator_controller[_number_control_excavator].PausePlayData();
             //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
         }
         ///--- Stop Play Data
@@ -529,7 +529,7 @@ public class TotalExcavatorController : MonoBehaviour
         ///--- Pause Play Data
         else if (Input.GetKey(KeyCode.D))
         {
-            _excavator_controller[_number_control_excavator].PuasePlayData();
+            _excavator_controller[_number_control_excavator].PausePlayData();
             //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
         }
         ///--- Stop Play Data
@@ -585,7 +585,7 @@ public class TotalExcavatorController : MonoBehaviour
         ///--- Pause Play Data
         else if (Input.GetKey(KeyCode.D))
         {
-            _excavator_controller[_number_control_excavator].PuasePlayData();
+            _excavator_controller[_number_control_excavator].PausePlayData();
             //Debug.Log(" Excavator" + (_number_control_excavator + 1) + " Pause Play Excavator Data.");
 
         }
@@ -730,7 +730,7 @@ public class TotalExcavatorController : MonoBehaviour
         {
             excavator_state[id - 1] = ExcavatorControlState.WAITING;
             _waitingQueue.Enqueue(id - 1);
-            //Debug.Log($"Excavator {id} が介入を要求しました。");
+            Debug.Log($"Excavator {id} が介入を要求しました。");
             StartNextExcavator();
         }
     }
@@ -744,8 +744,8 @@ public class TotalExcavatorController : MonoBehaviour
             _currentExcavator = nextExcavator;
             _number_control_excavator = nextExcavator;
             _camera_controller.ChangeControlExcavatorNumber(_number_control_excavator);
-            _excavator_controller[_currentExcavator].StartTeachPlay();
-            //Debug.Log($"Excavator {_currentExcavator + 1} が介入を開始しました。");
+            //_excavator_controller[_currentExcavator].StartTeachPlay();
+            Debug.Log($"Excavator {_currentExcavator + 1} が介入を開始しました。");
         }
     }
     private void TryStartNextIntervention()

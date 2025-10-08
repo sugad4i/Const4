@@ -1,6 +1,6 @@
 using UnityEngine;
-using TMPro;
 using Const;
+
 
 public class ScoreManager : MonoBehaviour
 {
@@ -15,10 +15,10 @@ public class ScoreManager : MonoBehaviour
     private static int[] boxScore = new int[100];
 
     // スコア表示用のTextMeshPro
-    public TextMeshProUGUI mainScoreText;
-    public TextMeshProUGUI subScoreText;
-    public TextMeshProUGUI blueScoreText;
-    public TextMeshProUGUI boxScoreText;
+    //public TextMeshProUGUI mainScoreText;
+    //public TextMeshProUGUI subScoreText;
+    //public TextMeshProUGUI blueScoreText;
+    //public TextMeshProUGUI boxScoreText;
 
     private void Awake()
     {
@@ -39,22 +39,8 @@ public class ScoreManager : MonoBehaviour
     {
         mainScore[(int)machine_number] += amount;
         Debug.Log($"機体{machine_number} の現在のメインスコア: {mainScore[(int)machine_number]}");
-        UpdateMainScoreText();
         
-        // BoxManagerを探して、そのhideOnMultipleで判定
-        var boxManagers = FindObjectsOfType<BoxManager>();
-        foreach (var box in boxManagers)
-        {
-            if ((int)box.machine_number == machine_number)
-            {
-                int n = box.hidenumber;
-                if (n > 0 && mainScore[(int)machine_number] % n == 0)
-                {
-                    //StartCoroutine(box.HandleObjectAppearance());
-                    stopper.boxmode[(int)machine_number] = 6;
-                }
-            }
-        }
+        stopper.boxmode[(int)machine_number] = 6; // 例えば移動モードを優先
     }
 
     // サブスコアを追加するメソッド
@@ -62,21 +48,21 @@ public class ScoreManager : MonoBehaviour
     {
         subScore[(int)machine_number] += amount;
         Debug.Log($"機体{machine_number} の現在のサブスコア: {subScore[(int)machine_number]}");
-        UpdateSubScoreText();
+        //UpdateSubScoreText();
     }
 
     public void AddBlueScore(int amount,int machine_number)
     {
         blueScore[(int)machine_number] += amount;
         Debug.Log($"機体{machine_number} の現在のBlueスコア: {blueScore[(int)machine_number]}");
-        UpdateBlueScoreText();
+        //UpdateBlueScoreText();
     }
 
     public void AddBoxScore(int amount,int machine_number)
     {
         boxScore[(int)machine_number] += amount;
         Debug.Log($"機体{machine_number} の現在のBoxスコア: {mainScore[(int)machine_number]}");
-        UpdateMainScoreText();
+        //UpdateMainScoreText();
         
         // BoxManagerを探して、そのhideOnMultipleで判定
         //var relocationManagers = FindObjectsOfType<RelocationManager>();
@@ -101,28 +87,29 @@ public class ScoreManager : MonoBehaviour
     }
 
     // メインスコアのテキストを更新
-    private void UpdateMainScoreText()
-    {
-        if (mainScoreText != null)
-        {
-            mainScoreText.text = "Main Score: " + mainScore;
-        }
-    }
+    //private void UpdateMainScoreText()
+    //{
+    //    if (mainScoreText != null)
+    //    {
+    //        mainScoreText.text = "Main Score: " + mainScore;
+    //    }
+    //}
 
     // サブスコアのテキストを更新
-    private void UpdateSubScoreText()
-    {
-        if (subScoreText != null)
-        {
-            subScoreText.text = "Sub Score: " + subScore;
-        }
-    }
+    //private void UpdateSubScoreText()
+    //{
+    //    if (subScoreText != null)
+    //    {
+    //        subScoreText.text = "Sub Score: " + subScore;
+    //    }
+    //}
+    //}
 
-    private void UpdateBlueScoreText()
-    {
-        if (blueScoreText != null)
-        {
-            blueScoreText.text = "Blue Score: " + blueScore;
-        }
-    }
+    //private void UpdateBlueScoreText()
+    //{
+    //    if (blueScoreText != null)
+    //    {
+    //        blueScoreText.text = "Blue Score: " + blueScore;
+    //    }
+    //}
 }

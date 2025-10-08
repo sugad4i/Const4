@@ -16,5 +16,7 @@ namespace Const
 
         public static int[] relocationmode = new int[100];
 
+        public static int[] manmode = new int[100];
+
     }
 }
