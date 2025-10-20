@@ -267,12 +267,6 @@ public class ExcavatorController : MonoBehaviour
                     stopper.manmode [(int)machine_number] = 0;
                     //Debug.Log($"Excavator({(int)machine_number}) restart");
                 }
-                else if (stopper.manmode[(int)machine_number] == 10)
-                {
-                    //Debug.Log("manmodeが10");
-                    PlayInterveneControlModifiedTrajectory();
-                    _state_tp = 0;
-                }
 
                 //==================bluemode================================
                 if (stopper.bluemode[(int)machine_number] == 2)

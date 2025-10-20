@@ -25,7 +25,7 @@ public class SphereManager4 : MonoBehaviour
     private Vector3 initialPosition;        // アイテムの初期位置を保存
     float displayTimer = 0f;          // アイテムの表示までのタイマー
     private float FirstDisplayTimer = 10f;              // アイテムの表示までのタイマー
-    private bool isHKeyPressed = false;     // Hキーが押されたかどうか
+    //private bool isHKeyPressed = false;     // Hキーが押されたかどうか
 
     private float forcedHideTimer = -1f; // Kキーでの強制消去タイマー
     private float forcedHideDelay = 3f; // Kキー押下後に消えるまでの遅延時間
@@ -41,10 +41,10 @@ public class SphereManager4 : MonoBehaviour
         stopper.manmode[(int)machine_number] = 1; // manmodeを更新
         FindObjectOfType<TotalExcavatorController>().RequestIntervention(machine_number);
         item.SetActive(true); // アイテムをアクティブ化
-        StartMove1();
+        StartMove();
     }
 
-    private void StartMove1()
+    private void StartMove()
     {
         targetPosition = initialPosition + relativeMove; // 移動1の目的地
         isMoving1 = true;
@@ -63,20 +63,24 @@ public class SphereManager4 : MonoBehaviour
 
         // タイマーをリセット
         displayTimer = -1 * FirstDisplayTimer;
+
+        stopper.manmode[(int)machine_number] = 0;
     }
 
     private void Update()
     {
-        // Hキーが押された場合
-        if (Input.GetKeyDown(KeyCode.H))
+        Debug.Log($"Control Excavator Number: {FindObjectOfType<TotalExcavatorController>().GetControlExcavatorNumber()}");
+        if (machine_number - 1 == FindObjectOfType<TotalExcavatorController>().GetControlExcavatorNumber())
         {
-            if (!item.activeSelf)
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                stopper.manmode[(int)machine_number] = 2;
-                isHKeyPressed = true; // Hキーが押されたことを記録
-                displayTimer = 0f; // Hキーが押された時点でタイマーをリセット
-                Debug.Log("Hキーが押され、球が出ていないためmanmode = 2に設定しました。");
-                FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
+                if (!item.activeSelf)
+                {
+                    stopper.manmode[(int)machine_number] = 2;
+                    //isHKeyPressed = true; // spaceキーが押されたことを記録
+                    displayTimer = 0f; // spaceキーが押された時点でタイマーをリセット
+                    FindObjectOfType<TotalExcavatorController>().EndIntervention(machine_number);
+                }
             }
         }
 
@@ -92,12 +96,16 @@ public class SphereManager4 : MonoBehaviour
             forcedHideTimer -= Time.deltaTime;
             if (forcedHideTimer <= 0)
             {
-                HideItem(machine_number);
+                //HideItem(machine_number);
                 forcedHideTimer = -1f; // タイマーをリセット
             }
         }
 
-        if (!item.activeSelf)
+        if (!item.activeSelf &&
+            stopper.movemode[(int)machine_number] == 0 &&
+            stopper.boxmode[(int)machine_number] == 0 &&
+            stopper.bluemode[(int)machine_number] == 0 &&
+            stopper.manmode[(int)machine_number] == 0)
         {
             displayTimer += Time.deltaTime;
 
@@ -126,6 +134,7 @@ public class SphereManager4 : MonoBehaviour
     private void OnMoveComplete()
     {
         Debug.Log("全ての移動完了");
+        HideItem(machine_number);
     }
 
     private void ShowItem(int machine_number)
@@ -135,7 +144,7 @@ public class SphereManager4 : MonoBehaviour
         // Debug.Log("manmode = " + stopper.manmode);
         Delay(2.0f, machine_number);
         // Debug.Log("delay");
-        Invoke("HideItem", visibleDuration);
+        //Invoke("HideItem", visibleDuration);
     }
 
     private void HideItem(int machine_number)
@@ -147,10 +156,12 @@ public class SphereManager4 : MonoBehaviour
         }
 
         // タイマーをリセット
+        item.transform.position = initialPosition;
         displayTimer = 0f;
-        isHKeyPressed = false; // Hキーが押された後は、次のタイマー開始までリセット
+        //isHKeyPressed = false; // Hキーが押された後は、次のタイマー開始までリセット
         stopper.manmode[(int)machine_number] = 4;
         stopper.capturemode[(int)machine_number] = 0;
+        
     }
 
 }
