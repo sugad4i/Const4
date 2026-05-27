@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社バスダービー</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
+        .bus-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { font-size: 16px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:active { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h1>🚌 社バスダービー 🐎</h1>
+    <div id="app"></div>
+
+    <script>
+        // バスの初期データ
+        const buses = [
+            { id: 1, name: "1号車（快速）", votes: 0 },
+            { id: 2, name: "2号車（各停）", votes: 0 },
+            { id: 3, name: "3号車（ダークホース）", votes: 0 }
+        ];
+
+        function render() {
+            const app = document.getElementById('app');
+            // 総投票数
+            const totalVotes = buses.reduce((sum, bus) => sum + bus.votes, 0);
+
+            let html = '';
+            buses.forEach(bus => {
+                // オッズ計算（票が0の場合は0倍、それ以外は総数/票数）
+                const odds = bus.votes > 0 ? (totalVotes / bus.votes).toFixed(1) : "0.0";
+                
+                html += `
+                    <div class="bus-card">
+                        <h2>${bus.name}</h2>
+                        <p>現在のオッズ: <strong>${odds} 倍</strong> (${bus.votes} 票)</p>
+                        <button onclick="vote(${bus.id})">投票する</button>
+                    </div>
+                `;
+            });
+            app.innerHTML = html;
+        }
+
+        function vote(id) {
+            const bus = buses.find(b => b.id === id);
+            if (bus) {
+                bus.votes++;
+                render(); // 画面を更新
+            }
+        }
+
+        // 初回表示
+        render();
+    </script>
+</body>
+</html>
