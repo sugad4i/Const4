@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KBPダービー</title>
+    <title>KBPダービー (三連単専用)</title>
     <style>
         body { font-family: sans-serif; text-align: center; background: #f0f0f0; padding: 10px; }
         .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -15,181 +15,141 @@
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background: #f2f2f2; }
         .odds { font-weight: bold; color: #dc3545; }
-        .bonus-info { font-size: 12px; color: #666; margin-top: 5px; text-align: left; background: #e2f0d9; padding: 8px; border-radius: 5px; }
+        .info-text { font-size: 14px; color: #555; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🚌 KBPダービー 🐎</h1>
-    <p>全員の総投票ポイント（原資）: <span id="total-points">0</span> PT</p>
+    <h2>【三連単専用モード】</h2>
+    <p class="info-text">1着・2着・3着の着順をドンピシャで当ててください．</p>
+    <p>全員の総投票数（原資）: <span id="total-points">0</span> 票</p>
 
     <hr>
 
     <h3>【投票パネル】</h3>
-    <select id="ticket-type" onchange="updateVoteForm()">
-        <option value="単勝">単勝 (1着) [重み: 1]</option>
-        <option value="馬連">馬連 (順不同2台) [重み: 2]</option>
-        <option value="馬单">馬単 (着順通り2台) [重om: 3]</option>
-        <option value="三連複">三連複 (順不同3台) [重み: 4]</option>
-        <option value="三連単">三連単 (着順通り3台) [重み: 6]</option>
-    </select>
+    <div>
+        <label>1着：</label>
+        <select id="pick1" onchange="updateOptions()"></select>
+        <br>
+        <label>2着：</label>
+        <select id="pick2" onchange="updateOptions()"></select>
+        <br>
+        <label>3着：</label>
+        <select id="pick3"></select>
+    </div>
     <br>
-
-    <div id="selection-area"></div>
 
     <button onclick="castVote()">投票する</button>
 
-    <div class="bonus-info">
-        🛡️ <strong>原資保証システム稼働中：</strong>的中した全ての買い目の「難易度（重み）」に応じて，集まった原資を100%きっちり山分けします．どれだけ的中が出ても原資を超える（パンクする）ことは絶対にありません．
-    </div>
-
-    <div class="pool-title">📊 暫定オッズ掲示板</div>
+    <div class="pool-title">📊 三連単オッズ掲示板</div>
     <div id="odds-tables"></div>
 </div>
 
 <script>
-    const totalBuses = 5;
-
-    // 各券種の難易度の重み
-    const weightRates = {
-        "単勝": 1,
-        "馬連": 2,
-        "馬单": 3,
-        "三連複": 4,
-        "三連単": 6
-    };
-
+    const totalBuses = 5; // 1号車〜5号車
     let votePool = {
         total: 0,
-        "単勝": {},
-        "馬連": {},
-        "馬单": {},
-        "三連複": {},
-        "三連単": {}
+        buses: {}
     };
 
-    function updateVoteForm() {
-        const type = document.getElementById('ticket-type').value;
-        const area = document.getElementById('selection-area');
-        let html = '';
+    // プルダウンの選択肢をリアルタイムに制御する関数
+    function updateOptions() {
+        const p1Select = document.getElementById('pick1');
+        const p2Select = document.getElementById('pick2');
+        const p3Select = document.getElementById('pick3');
 
-        if (type === "単勝") {
-            html += `<select id="pick1">${getBusOptions()}</select>`;
-        } else if (type === "馬連" || type === "馬单") {
-            html += `
-                <select id="pick1">${getBusOptions()}</select>
-                <span>-</span>
-                <select id="pick2">${getBusOptions()}</select>
-            `;
-        } else if (type === "三連複" || type === "三連単") {
-            html += `
-                <select id="pick1">${getBusOptions()}</select>
-                <span>-</span>
-                <select id="pick2">${getBusOptions()}</select>
-                <span>-</span>
-                <select id="pick3">${getBusOptions()}</select>
-            `;
+        // 現在選ばれている値を取得（初回は空）
+        const p1Value = p1Select.value;
+        const p2Value = p2Select.value;
+        const p3Value = p3Select.value;
+
+        // --- 1着のプルダウン生成（常に1〜5全部） ---
+        if (p1Select.innerHTML === "") {
+            let html = '<option value="">--選択--</option>';
+            for (let i = 1; i <= totalBuses; i++) {
+                html += `<option value="${i}">${i}号車</option>`;
+            }
+            p1Select.innerHTML = html;
+            p1Select.value = p1Value;
         }
-        area.innerHTML = html;
+
+        // --- 2着のプルダウン生成（1着で選んだやつを除く） ---
+        let p2Html = '<option value="">--選択--</option>';
+        for (let i = 1; i <= totalBuses; i++) {
+            if (String(i) !== p1Value) {
+                p2Html += `<option value="${i}">${i}号車</option>`;
+            }
+        }
+        p2Select.innerHTML = p2Html;
+        // 1着と同じ値が残らないように引き継ぐ
+        if (p2Value !== p1Value) p2Select.value = p2Value;
+
+        // --- 3着のプルダウン生成（1着と2着で選んだやつを除く） ---
+        let p3Html = '<option value="">--選択--</option>';
+        const currentP2 = p2Select.value;
+        for (let i = 1; i <= totalBuses; i++) {
+            if (String(i) !== p1Value && String(i) !== currentP2) {
+                p3Html += `<option value="${i}">${i}号車</option>`;
+            }
+        }
+        p3Select.innerHTML = p3Html;
+        if (p3Value !== p1Value && p3Value !== currentP2) p3Select.value = p3Value;
     }
 
-    function getBusOptions() {
-        let options = '';
-        for(let i = 1; i <= totalBuses; i++) {
-            options += `<option value="${i}">${i}号車</option>`;
-        }
-        return options;
-    }
-
+    // 投票ボタンを押した時の処理
     function castVote() {
-        const type = document.getElementById('ticket-type').value;
-        let key = "";
-
         const p1 = document.getElementById('pick1').value;
-        const p2 = document.getElementById('pick2') ? document.getElementById('pick2').value : null;
-        const p3 = document.getElementById('pick3') ? document.getElementById('pick3').value : null;
+        const p2 = document.getElementById('pick2').value;
+        const p3 = document.getElementById('pick3').value;
 
-        if (type === "単勝") {
-            key = p1 + "号車";
-        } 
-        else if (type === "馬連" || type === "馬单") {
-            if (p1 === p2) {
-                alert("同じバスを選んだらアカンで！");
-                return;
-            }
-            if (type === "馬連") {
-                key = [p1, p2].sort().join("-");
-            } else {
-                key = `${p1}→${p2}`;
-            }
-        } 
-        else if (type === "三連複" || type === "三連単") {
-            if (p1 === p2 || p1 === p3 || p2 === p3) {
-                alert("同じバスを複数選ぶことはできんで！");
-                return;
-            }
-            if (type === "三連複") {
-                key = [p1, p2, p3].sort().join("-");
-            } else {
-                key = `${p1}→${p2}→${p3}`;
-            }
+        // 未選択チェック
+        if (!p1 || !p2 || !p3) {
+            alert("1着から3着まで全部選んでな！");
+            return;
         }
 
-        if (!votePool[type][key]) votePool[type][key] = 0;
-        votePool[type][key]++;
+        // 三連単の買い目キー（例：1→2→3）
+        const key = `${p1}→${p2}→${p3}`;
+
+        // 投票の記録
+        if (!votePool.buses[key]) votePool.buses[key] = 0;
+        votePool.buses[key]++;
         votePool.total++;
 
         render();
     }
 
+    // 画面の更新とオッズ計算
     function render() {
         document.getElementById('total-points').innerText = votePool.total;
         const tablesArea = document.getElementById('odds-tables');
-        let html = '';
+        
+        if (Object.keys(votePool.buses).length === 0) {
+            tablesArea.innerHTML = "<p>投票はまだありません</p>";
+            return;
+        }
 
-        // 【ここが新しい計算ロジック】
-        // 他のすべての投票が「もし同時に的中したら」と仮定してオッズを割り出す
-        ["単勝", "馬連", "馬单", "三連複", "三連単"].forEach(type => {
-            const votes = votePool[type];
-            if (Object.keys(votes).length === 0) return;
-
-            html += `<h4>【${type}】</h4><table><tr><th>買い目</th><th>票数</th><th>仮オッズ</th></tr>`;
-            
-            for (let key in votes) {
-                // その買い目が的中した時の、全券種をあわせた仮の総スコアを計算
-                let temporaryTotalScore = 0;
-                
-                ["単勝", "馬連", "馬单", "三連複", "三連単"].forEach(t => {
-                    for (let k in votePool[t]) {
-                        // 的中（または同時的中）の可能性がある買い目のスコアを足す
-                        // ここでは簡易的に「その買い目が当たった場合、自票のスコア」をベースに、
-                        // 全ての投票の難易度比率を維持したまま原資を分配する計算を行う
-                        temporaryTotalScore += votePool[t][k] * weightRates[t];
-                    }
-                });
-
-                // 1スコアあたりのポイント数 = 総原資 / 総スコア
-                const pointPerScore = votePool.total / temporaryTotalScore;
-                
-                // この買い目のオッズ = 1スコアあたりのポイント × この券種の重み
-                const finalOdds = (pointPerScore * weightRates[type]).toFixed(1);
-                
-                html += `
-                    <tr>
-                        <td><strong>${key}</strong></td>
-                        <td>${votes[key]}票</td>
-                        <td class="odds">${finalOdds}倍</td>
-                    </tr>
-                `;
-            }
-            html += `</table>`;
-        });
-
+        let html = '<table><tr><th>買い目</th><th>票数</th><th>オッズ</th></tr>';
+        
+        for (let key in votePool.buses) {
+            // オッズ ＝ 総票数 ／ その買い目の票数
+            const odds = (votePool.total / votePool.buses[key]).toFixed(1);
+            html += `
+                <tr>
+                    <td><strong>${key}</strong></td>
+                    <td>${votePool.buses[key]}票</td>
+                    <td class="odds">${odds}倍</td>
+                </tr>
+            `;
+        }
+        html += `</table>`;
         tablesArea.innerHTML = html;
     }
 
-    updateVoteForm();
+    // 起動時にプルダウンを初期化
+    updateOptions();
 </script>
 </body>
 </html>
