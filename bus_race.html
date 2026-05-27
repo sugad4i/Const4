@@ -3,59 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KPBダービー</title>
+    <title>KBPダービー</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f0f0; }
-        .bus-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        button { font-size: 16px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:active { background: #0056b3; }
+        body { font-family: sans-serif; text-align: center; background: #f0f0f0; padding: 10px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        select, button { font-size: 16px; padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:active { background: #218838; }
+        .pool-title { background: #007bff; color: white; padding: 5px; border-radius: 5px; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background: #f2f2f2; }
+        .odds { font-weight: bold; color: #dc3545; }
     </style>
 </head>
 <body>
 
+<div class="container">
     <h1>🚌 KBPダービー 🐎</h1>
-    <div id="app"></div>
+    <p>全員の総投票ポイント: <span id="total-points">0</span> PT</p>
 
-    <script>
-        // バスの初期データ
-        const buses = [
-            { id: 1, name: "1号車", votes: 0 },
-            { id: 2, name: "2号車", votes: 0 },
-            { id: 3, name: "3号車", votes: 0 },
-            { id: 4, name: "4号車", votes: 0 }
-        ];
+    <hr>
 
-        function render() {
-            const app = document.getElementById('app');
-            // 総投票数
-            const totalVotes = buses.reduce((sum, bus) => sum + bus.votes, 0);
+    <h3>【投票パネル】</h3>
+    <select id="ticket-type" onchange="updateVoteForm()">
+        <option value="単勝">単勝 (1着を当てる)</option>
+        <option value="馬連">馬連 (順不同で2台当てる)</option>
+        <option value="馬单">馬単 (着順通りに2台当てる)</option>
+        <option value="三連複">三連複 (順不同で3台当てる)</option>
+        <option value="三連単">三連単 (着順通りに3台当てる)</option>
+    </select>
+    <br>
 
-            let html = '';
-            buses.forEach(bus => {
-                // オッズ計算（票が0の場合は0倍、それ以外は総数/票数）
-                const odds = bus.votes > 0 ? (totalVotes / bus.votes).toFixed(1) : "0.0";
-                
-                html += `
-                    <div class="bus-card">
-                        <h2>${bus.name}</h2>
-                        <p>現在のオッズ: <strong>${odds} 倍</strong> (${bus.votes} 票)</p>
-                        <button onclick="vote(${bus.id})">投票する</button>
-                    </div>
-                `;
-            });
-            app.innerHTML = html;
+    <div id="selection-area"></div>
+
+    <button onclick="castVote()">投票する</button>
+
+    <div class="pool-title">📊 オッズ掲示板</div>
+    <div id="odds-tables"></div>
+</div>
+
+<script>
+    const totalBuses = 5;
+
+    // 投票データを格納するオブジェクト（馬連・馬単を追加）
+    let votePool = {
+        total: 0,
+        "単勝": {},
+        "馬連": {},
+        "馬单": {},
+        "三連複": {},
+        "三連単": {}
+    };
+
+    // フォームの切り替え
+    function updateVoteForm() {
+        const type = document.getElementById('ticket-type').value;
+        const area = document.getElementById('selection-area');
+        let html = '';
+
+        if (type === "単勝") {
+            html += `<select id="pick1">${getBusOptions()}</select>`;
+        } else if (type === "馬連" || type === "馬单") {
+            html += `
+                <select id="pick1">${getBusOptions()}</select>
+                <span>-</span>
+                <select id="pick2">${getBusOptions()}</select>
+            `;
+        } else if (type === "三連複" || type === "三連単") {
+            html += `
+                <select id="pick1">${getBusOptions()}</select>
+                <span>-</span>
+                <select id="pick2">${getBusOptions()}</select>
+                <span>-</span>
+                <select id="pick3">${getBusOptions()}</select>
+            `;
         }
+        area.innerHTML = html;
+    }
 
-        function vote(id) {
-            const bus = buses.find(b => b.id === id);
-            if (bus) {
-                bus.votes++;
-                render(); // 画面を更新
+    function getBusOptions() {
+        let options = '';
+        for(let i = 1; i <= totalBuses; i++) {
+            options += `<option value="${i}">${i}号車</option>`;
+        }
+        return options;
+    }
+
+    // 投票ボタンを押した時の処理
+    function castVote() {
+        const type = document.getElementById('ticket-type').value;
+        let key = "";
+
+        const p1 = document.getElementById('pick1').value;
+        const p2 = document.getElementById('pick2') ? document.getElementById('pick2').value : null;
+        const p3 = document.getElementById('pick3') ? document.getElementById('pick3').value : null;
+
+        if (type === "単勝") {
+            key = p1 + "号車";
+        } 
+        // 馬連・馬単の処理
+        else if (type === "馬連" || type === "馬单") {
+            if (p1 === p2) {
+                alert("同じバスを選んだらアカンで！");
+                return;
+            }
+            if (type === "馬連") {
+                key = [p1, p2].sort().join("-"); // 順不同（1-4も4-1も「1-4」になる）
+            } else {
+                key = `${p1}→${p2}`; // 着順通り（1→4）
+            }
+        } 
+        // 三連複・三連単の処理
+        else if (type === "三連複" || type === "三連単") {
+            if (p1 === p2 || p1 === p3 || p2 === p3) {
+                alert("同じバスを複数選ぶことはできんで！");
+                return;
+            }
+            if (type === "三連複") {
+                key = [p1, p2, p3].sort().join("-"); // 順不同
+            } else {
+                key = `${p1}→${p2}→${p3}`; // 着順通り
             }
         }
 
-        // 初回表示
+        // 投票の記録
+        if (!votePool[type][key]) votePool[type][key] = 0;
+        votePool[type][key]++;
+        votePool.total++;
+
         render();
-    </script>
+    }
+
+    // 画面の更新とオッズ計算
+    function render() {
+        document.getElementById('total-points').innerText = votePool.total;
+        const tablesArea = document.getElementById('odds-tables');
+        let html = '';
+
+        // 全種類のテーブルをループで生成
+        ["単勝", "馬連", "馬单", "三連複", "三連単"].forEach(type => {
+            const votes = votePool[type];
+            if (Object.keys(votes).length === 0) return;
+
+            html += `<h4>【${type}】</h4><table><tr><th>買い目</th><th>票数</th><th>オッズ</th></tr>`;
+            
+            for (let key in votes) {
+                const odds = (votePool.total / votes[key]).toFixed(1);
+                html += `
+                    <tr>
+                        <td><strong>${key}</strong></td>
+                        <td>${votes[key]}票</td>
+                        <td class="odds">${odds}倍</td>
+                    </tr>
+                `;
+            }
+            html += `</table>`;
+        });
+
+        tablesArea.innerHTML = html;
+    }
+
+    // 最初にフォームを表示
+    updateVoteForm();
+</script>
 </body>
 </html>
