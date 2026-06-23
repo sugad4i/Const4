@@ -32,10 +32,10 @@
             margin: 10px 5px;
         }
         button:hover { background-color: #0056b3; }
-        button.secondary {
-            background-color: #6c757d;
-        }
+        button.secondary { background-color: #6c757d; }
         button.secondary:hover { background-color: #5a6268; }
+        button.danger { background-color: #dc3545; }
+        button.danger:hover { background-color: #bd2130; }
         .secret-card {
             background-color: #e9ecef;
             padding: 20px;
@@ -51,6 +51,21 @@
             color: #666;
             margin-bottom: 15px;
         }
+        .input-group {
+            margin: 20px 0;
+        }
+        input[type="number"] {
+            padding: 8px;
+            font-size: 16px;
+            width: 60px;
+            text-align: center;
+        }
+        .alive-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
@@ -58,11 +73,17 @@
 <div class="container">
     <h1>🐺 事務系ワードウルフ 🐺</h1>
     
+    <!-- 設定画面 -->
     <div id="setup-screen">
         <p>オフィスに潜むウルフ（少数派）を見つけ出せ！</p>
+        <div class="input-group">
+            <label>プレイヤー人数：</label>
+            <input type="number" id="total-players" value="4" min="3" max="10"> 人
+        </div>
         <button onclick="startGame()">ゲームを開始する</button>
     </div>
 
+    <!-- お題確認画面 -->
     <div id="game-screen" class="hidden">
         <h2 id="player-turn">プレイヤー 1 の番です</h2>
         <p class="instructions">「お題を見る」ボタンを押しとる間だけ，自分のお題が表示されるで．周りに見られんように気をつけてな！</p>
@@ -76,53 +97,48 @@
         </div>
     </div>
 
+    <!-- 議論画面 -->
     <div id="discussion-screen" class="hidden">
-        <h2>全員確認完了！</h2>
-        <p>話し合いを開始してください．</p>
-        <p>事務仕事の感覚を研ぎ澄ませて，ウルフを炙り出すんや！</p>
-        <button onclick="resetGame()">もう一度遊ぶ</button>
+        <h2>🗣️ 話し合いタイム 🗣️</h2>
+        <p>事務仕事の感覚を研ぎ澄ませて，誰がウルフか炙り出すんや！</p>
+        <p>話し合いが終わったら，下のボタンを押して投票に進んでな．</p>
+        <button onclick="goToVote()">投票画面へ</button>
+    </div>
+
+    <!-- 投票・処刑画面 -->
+    <div id="vote-screen" class="hidden">
+        <h2>投票で1人ずつ殺せます</h2>
+        <p>話し合いの結果，一番怪しいと思う人を1人選んで殺してな．</p>
+        <div class="alive-list" id="alive-players-container">
+            <!-- 生存プレイヤーのボタンがここに生成される -->
+        </div>
+        <button onclick="resetGame()" class="secondary">タイトルへ戻る</button>
     </div>
 </div>
 
 <script>
-    // 事務系に特化したお題リスト（[市民のお題, ウルフのお題]）
+    // 事務系に特化したお題リスト
     const themeList = [
-        ["Excel（エクセル）", "Word（ワード）"],
-        ["Slack（スラック）", "LINE WORKS"],
-        ["Zoom（ズーム）", "Teams（チームズ）"],
-        ["デスクトップPC", "ノートPC"],
-        ["プロジェクター", "大型モニター"],
-        ["有線LAN", "Wi-Fi"],
-        ["Googleドライブ", "USBメモリ"],
-        ["請求書", "領収書"],
-        ["契約書", "見積書"],
-        ["ボールペン", "万年筆"],
-        ["シュレッダー", "ゴミ箱"],
-        ["ホッチキス", "クリップ"],
-        ["履歴書", "職務経歴書"],
-        ["パンフレット", "チラシ"],
-        ["データ入力", "タイピング"],
-        ["経費精算", "確定申告"],
-        ["年末調整", "確定申告"],
-        ["有給休暇", "育児休暇"],
-        ["定時退社", "直行直帰"],
-        ["在宅勤務（テレワーク）", "出張"],
-        ["議事録作成", "メール返信"],
-        ["定例会議", "朝礼"],
-        ["社内ミーティング", "クライアント商談"],
-        ["敬語", "タメ口"],
-        ["電話対応", "来客対応"],
-        ["名刺交換", "挨拶"],
-        ["正社員", "契約社員"],
-        ["派遣社員", "アルバイト"],
-        ["上司", "先輩"],
-        ["部署移動", "転職"]
+        ["Excel（エクセル）", "Word（ワード）"], ["Slack（スラック）", "LINE WORKS"],
+        ["Zoom（ズーム）", "Teams（チームズ）"], ["デスクトップPC", "ノートPC"],
+        ["プロジェクター", "大型モニター"], ["有線LAN", "Wi-Fi"],
+        ["Googleドライブ", "USBメモリ"], ["請求書", "領収書"],
+        ["契約書", "見積書"], ["ボールペン", "万年筆"],
+        ["シュレッダー", "ゴミ箱"], ["ホッチキス", "クリップ"],
+        ["履歴書", "職務経歴書"], ["パンフレット", "チラシ"],
+        ["データ入力", "タイピング"], ["経費精算", "確定申告"],
+        ["年末調整", "確定申告"], ["有給休暇", "育児休暇"],
+        ["定時退社", "直行直帰"], ["在宅勤務（テレワーク）", "出張"],
+        ["議事録作成", "メール返信"], ["定例会議", "朝礼"],
+        ["社内ミーティング", "クライアント商談"], ["敬語", "タメ口"],
+        ["電話対応", "来客対応"], ["名刺交換", "挨拶"],
+        ["正社員", "契約社員"], ["派遣社員", "アルバイト"],
+        ["上司", "先輩"], ["部署移動", "転職"]
     ];
 
-    let players = ["市民", "市民", "市民", "ウルフ"]; // 4人プレイ固定
-    let currentWords = [];
+    let playerList = []; // 各プレイヤーの情報 { id: 1, role: "市民", word: "...", alive: true }
     let currentPlayerIndex = 0;
-    let hasViewed = false; // お題を一度でも見たかどうかのフラグ
+    let hasViewed = false;
 
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -132,16 +148,31 @@
     }
 
     function startGame() {
-        // お題の抽選
+        const total = parseInt(document.getElementById("total-players").value);
+        if (total < 3) { alert("3人以上で遊んでな！"); return; }
+
+        // 役割の組み立て（基本ウルフは1人，人数が多ければ調整可能）
+        let roles = ["ウルフ"];
+        for (let i = 1; i < total; i++) {
+            roles.push("市民");
+        }
+        shuffle(roles);
+
+        // お題の決定
         const randomTheme = themeList[Math.floor(Math.random() * themeList.length)];
         const citizenWord = randomTheme[0];
         const wolfWord = randomTheme[1];
 
-        // プレイヤーの役割をシャッフル
-        shuffle(players);
-
-        // 各プレイヤーにお題を割り当て
-        currentWords = players.map(role => role === "市民" ? citizenWord : wolfWord);
+        // プレイヤーデータの初期化
+        playerList = [];
+        for (let i = 0; i < total; i++) {
+            playerList.push({
+                id: i + 1,
+                role: roles[i],
+                word: roles[i] === "市民" ? citizenWord : wolfWord,
+                alive: true
+            });
+        }
         
         currentPlayerIndex = 0;
         document.getElementById("setup-screen").classList.add("hidden");
@@ -150,30 +181,28 @@
     }
 
     function updatePlayerTurn() {
-        if (currentPlayerIndex < currentWords.length) {
-            document.getElementById("player-turn").innerText = `プレイヤー ${currentPlayerIndex + 1} の番です`;
+        if (currentPlayerIndex < playerList.length) {
+            document.getElementById("player-turn").innerText = `プレイヤー ${playerList[currentPlayerIndex].id} の番です`;
             document.getElementById("word-display").innerText = "???";
             document.getElementById("next-action-area").classList.add("hidden");
             document.getElementById("view-btn").classList.remove("hidden");
             hasViewed = false;
         } else {
-            // 全員見終わったら議論画面へ
             document.getElementById("game-screen").classList.add("hidden");
             document.getElementById("discussion-screen").classList.remove("hidden");
         }
     }
 
     function showWord() {
-        if (currentPlayerIndex < currentWords.length) {
-            document.getElementById("word-display").innerText = currentWords[currentPlayerIndex];
+        if (currentPlayerIndex < playerList.length) {
+            document.getElementById("word-display").innerText = playerList[currentPlayerIndex].word;
             hasViewed = true;
         }
     }
 
     function hideWord() {
-        if (currentPlayerIndex < currentWords.length) {
+        if (currentPlayerIndex < playerList.length) {
             document.getElementById("word-display").innerText = "???";
-            // 一度でもお題を見たら「次のプレイヤーへ」進むためのエリアを表示する
             if (hasViewed) {
                 document.getElementById("next-action-area").classList.remove("hidden");
                 document.getElementById("view-btn").classList.add("hidden");
@@ -186,26 +215,68 @@
         updatePlayerTurn();
     }
 
-    // イベントリスナーの設定（PCとスマホの両方に対応）
+    function goToVote() {
+        document.getElementById("discussion-screen").classList.add("hidden");
+        document.getElementById("vote-screen").classList.remove("hidden");
+        renderAlivePlayers();
+    }
+
+    // 生きとるプレイヤーのボタンを生成
+    function renderAlivePlayers() {
+        const container = document.getElementById("alive-players-container");
+        container.innerHTML = "";
+
+        playerList.forEach(p => {
+            if (p.alive) {
+                const btn = document.createElement("button");
+                btn.className = "danger";
+                btn.innerText = `プレイヤー ${p.id} を殺す`;
+                btn.onclick = () => killPlayer(p.id);
+                container.appendChild(btn);
+            }
+        });
+    }
+
+    // プレイヤーを殺す（処刑）処理
+    function killPlayer(id) {
+        const target = playerList.find(p => p.id === id);
+        target.alive = false;
+
+        // 正体バラシの演出
+        if (target.role === "ウルフ") {
+            alert(`プレイヤー ${id} を殺しました．\n正体は【ウルフ】でした！\n市民チームの勝ちや！`);
+            resetGame();
+        } else {
+            // 生きとるウルフと市民の数を数える
+            const aliveWolf = playerList.filter(p => p.alive && p.role === "ウルフ").length;
+            const aliveCitizen = playerList.filter(p => p.alive && p.role === "市民").length;
+
+            if (aliveWolf === 0) {
+                alert(`プレイヤー ${id} を殺しました．\n正体は【市民】でした．\nウルフは全滅したで！市民チームの勝ちや！`);
+                resetGame();
+            } else if (aliveCitizen <= aliveWolf) {
+                alert(`プレイヤー ${id} を殺しました．\n正体は【市民】でした．\n市民の数がウルフ以下になったわ…．ウルフチームの勝ちや！`);
+                resetGame();
+            } else {
+                alert(`プレイヤー ${id} を殺しました．\n正体は【市民】でした…（無実）．\nまだウルフは潜んどるで！次の話し合いを始めてな．`);
+                // 再び話し合い画面に戻る
+                document.getElementById("vote-screen").classList.add("hidden");
+                document.getElementById("discussion-screen").classList.remove("hidden");
+            }
+        }
+    }
+
+    // イベント設定
     const viewBtn = document.getElementById("view-btn");
-    
-    // マウスイベント
     viewBtn.addEventListener("mousedown", showWord);
     viewBtn.addEventListener("mouseup", hideWord);
-    viewBtn.addEventListener("mouseleave", hideWord); // ボタン外にカーソルが外れた時用
-    
-    // タッチイベント（スマホ用）
-    viewBtn.addEventListener("touchstart", (e) => { 
-        e.preventDefault(); 
-        showWord(); 
-    });
-    viewBtn.addEventListener("touchend", (e) => { 
-        e.preventDefault(); 
-        hideWord(); 
-    });
+    viewBtn.addEventListener("mouseleave", hideWord);
+    viewBtn.addEventListener("touchstart", (e) => { e.preventDefault(); showWord(); });
+    viewBtn.addEventListener("touchend", (e) => { e.preventDefault(); hideWord(); });
 
     function resetGame() {
         document.getElementById("discussion-screen").classList.add("hidden");
+        document.getElementById("vote-screen").classList.add("hidden");
         document.getElementById("setup-screen").classList.remove("hidden");
     }
 </script>
