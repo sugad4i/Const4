@@ -3,153 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KBPダービー (三連単専用)</title>
+    <title>事務系ワードウルフ</title>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #f0f0f0; padding: 10px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        select, button { font-size: 16px; padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
-        button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:active { background: #218838; }
-        .pool-title { background: #007bff; color: white; padding: 5px; border-radius: 5px; margin-top: 20px; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background: #f2f2f2; }
-        .odds { font-weight: bold; color: #dc3545; }
-        .info-text { font-size: 14px; color: #555; margin-bottom: 15px; }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button.secondary {
+            background-color: #6c757d;
+        }
+        button.secondary:hover { background-color: #5a6268; }
+        .secret-card {
+            background-color: #e9ecef;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            min-height: 40px;
+        }
+        .hidden { display: none; }
+        .instructions {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🚌 KBPダービー 🐎</h1>
-    <h2>【三連単専用モード】</h2>
-    <p class="info-text">1着・2着・3着の着順をドンピシャで当ててください．</p>
-    <p>全員の総投票数（原資）: <span id="total-points">0</span> 票</p>
-
-    <hr>
-
-    <h3>【投票パネル】</h3>
-    <div>
-        <label>1着：</label>
-        <select id="pick1" onchange="updateOptions()"></select>
-        <br>
-        <label>2着：</label>
-        <select id="pick2" onchange="updateOptions()"></select>
-        <br>
-        <label>3着：</label>
-        <select id="pick3"></select>
+    <h1>🐺 事務系ワードウルフ 🐺</h1>
+    
+    <div id="setup-screen">
+        <p>オフィスに潜むウルフ（少数派）を見つけ出せ！</p>
+        <button onclick="startGame()">ゲームを開始する</button>
     </div>
-    <br>
 
-    <button onclick="castVote()">投票する</button>
+    <div id="game-screen" class="hidden">
+        <h2 id="player-turn">プレイヤー 1 の番です</h2>
+        <p class="instructions">「お題を見る」ボタンを押しとる間だけ，自分のお題が表示されるで．周りに見られんように気をつけてな！</p>
+        
+        <div class="secret-card" id="word-display" style="user-select: none;">???</div>
+        
+        <button id="view-btn">お題を見る（長押し）</button>
+        <div id="next-action-area" class="hidden">
+            <p>確認したら，次のプレイヤーに交代してな．</p>
+            <button onclick="nextPlayer()" class="secondary">次のプレイヤーへ</button>
+        </div>
+    </div>
 
-    <div class="pool-title">📊 三連単オッズ掲示板</div>
-    <div id="odds-tables"></div>
+    <div id="discussion-screen" class="hidden">
+        <h2>全員確認完了！</h2>
+        <p>話し合いを開始してください．</p>
+        <p>事務仕事の感覚を研ぎ澄ませて，ウルフを炙り出すんや！</p>
+        <button onclick="resetGame()">もう一度遊ぶ</button>
+    </div>
 </div>
 
 <script>
-    const totalBuses = 5; // 1号車〜5号車
-    let votePool = {
-        total: 0,
-        buses: {}
-    };
+    // 事務系に特化したお題リスト（[市民のお題, ウルフのお題]）
+    const themeList = [
+        ["Excel（エクセル）", "Word（ワード）"],
+        ["Slack（スラック）", "LINE WORKS"],
+        ["Zoom（ズーム）", "Teams（チームズ）"],
+        ["デスクトップPC", "ノートPC"],
+        ["プロジェクター", "大型モニター"],
+        ["有線LAN", "Wi-Fi"],
+        ["Googleドライブ", "USBメモリ"],
+        ["請求書", "領収書"],
+        ["契約書", "見積書"],
+        ["ボールペン", "万年筆"],
+        ["シュレッダー", "ゴミ箱"],
+        ["ホッチキス", "クリップ"],
+        ["履歴書", "職務経歴書"],
+        ["パンフレット", "チラシ"],
+        ["データ入力", "タイピング"],
+        ["経費精算", "確定申告"],
+        ["年末調整", "確定申告"],
+        ["有給休暇", "育児休暇"],
+        ["定時退社", "直行直帰"],
+        ["在宅勤務（テレワーク）", "出張"],
+        ["議事録作成", "メール返信"],
+        ["定例会議", "朝礼"],
+        ["社内ミーティング", "クライアント商談"],
+        ["敬語", "タメ口"],
+        ["電話対応", "来客対応"],
+        ["名刺交換", "挨拶"],
+        ["正社員", "契約社員"],
+        ["派遣社員", "アルバイト"],
+        ["上司", "先輩"],
+        ["部署移動", "転職"]
+    ];
 
-    // プルダウンの選択肢をリアルタイムに制御する関数
-    function updateOptions() {
-        const p1Select = document.getElementById('pick1');
-        const p2Select = document.getElementById('pick2');
-        const p3Select = document.getElementById('pick3');
+    let players = ["市民", "市民", "市民", "ウルフ"]; // 4人プレイ固定
+    let currentWords = [];
+    let currentPlayerIndex = 0;
+    let hasViewed = false; // お題を一度でも見たかどうかのフラグ
 
-        // 現在選ばれている値を取得（初回は空）
-        const p1Value = p1Select.value;
-        const p2Value = p2Select.value;
-        const p3Value = p3Select.value;
-
-        // --- 1着のプルダウン生成（常に1〜5全部） ---
-        if (p1Select.innerHTML === "") {
-            let html = '<option value="">--選択--</option>';
-            for (let i = 1; i <= totalBuses; i++) {
-                html += `<option value="${i}">${i}号車</option>`;
-            }
-            p1Select.innerHTML = html;
-            p1Select.value = p1Value;
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[array[j]]] = [array[j], array[i]];
         }
-
-        // --- 2着のプルダウン生成（1着で選んだやつを除く） ---
-        let p2Html = '<option value="">--選択--</option>';
-        for (let i = 1; i <= totalBuses; i++) {
-            if (String(i) !== p1Value) {
-                p2Html += `<option value="${i}">${i}号車</option>`;
-            }
-        }
-        p2Select.innerHTML = p2Html;
-        // 1着と同じ値が残らないように引き継ぐ
-        if (p2Value !== p1Value) p2Select.value = p2Value;
-
-        // --- 3着のプルダウン生成（1着と2着で選んだやつを除く） ---
-        let p3Html = '<option value="">--選択--</option>';
-        const currentP2 = p2Select.value;
-        for (let i = 1; i <= totalBuses; i++) {
-            if (String(i) !== p1Value && String(i) !== currentP2) {
-                p3Html += `<option value="${i}">${i}号車</option>`;
-            }
-        }
-        p3Select.innerHTML = p3Html;
-        if (p3Value !== p1Value && p3Value !== currentP2) p3Select.value = p3Value;
     }
 
-    // 投票ボタンを押した時の処理
-    function castVote() {
-        const p1 = document.getElementById('pick1').value;
-        const p2 = document.getElementById('pick2').value;
-        const p3 = document.getElementById('pick3').value;
+    function startGame() {
+        // お題の抽選
+        const randomTheme = themeList[Math.floor(Math.random() * themeList.length)];
+        const citizenWord = randomTheme[0];
+        const wolfWord = randomTheme[1];
 
-        // 未選択チェック
-        if (!p1 || !p2 || !p3) {
-            alert("1着から3着まで全部選んでな！");
-            return;
-        }
+        // プレイヤーの役割をシャッフル
+        shuffle(players);
 
-        // 三連単の買い目キー（例：1→2→3）
-        const key = `${p1}→${p2}→${p3}`;
-
-        // 投票の記録
-        if (!votePool.buses[key]) votePool.buses[key] = 0;
-        votePool.buses[key]++;
-        votePool.total++;
-
-        render();
-    }
-
-    // 画面の更新とオッズ計算
-    function render() {
-        document.getElementById('total-points').innerText = votePool.total;
-        const tablesArea = document.getElementById('odds-tables');
+        // 各プレイヤーにお題を割り当て
+        currentWords = players.map(role => role === "市民" ? citizenWord : wolfWord);
         
-        if (Object.keys(votePool.buses).length === 0) {
-            tablesArea.innerHTML = "<p>投票はまだありません</p>";
-            return;
-        }
-
-        let html = '<table><tr><th>買い目</th><th>票数</th><th>オッズ</th></tr>';
-        
-        for (let key in votePool.buses) {
-            // オッズ ＝ 総票数 ／ その買い目の票数
-            const odds = (votePool.total / votePool.buses[key]).toFixed(1);
-            html += `
-                <tr>
-                    <td><strong>${key}</strong></td>
-                    <td>${votePool.buses[key]}票</td>
-                    <td class="odds">${odds}倍</td>
-                </tr>
-            `;
-        }
-        html += `</table>`;
-        tablesArea.innerHTML = html;
+        currentPlayerIndex = 0;
+        document.getElementById("setup-screen").classList.add("hidden");
+        document.getElementById("game-screen").classList.remove("hidden");
+        updatePlayerTurn();
     }
 
-    // 起動時にプルダウンを初期化
-    updateOptions();
+    function updatePlayerTurn() {
+        if (currentPlayerIndex < currentWords.length) {
+            document.getElementById("player-turn").innerText = `プレイヤー ${currentPlayerIndex + 1} の番です`;
+            document.getElementById("word-display").innerText = "???";
+            document.getElementById("next-action-area").classList.add("hidden");
+            document.getElementById("view-btn").classList.remove("hidden");
+            hasViewed = false;
+        } else {
+            // 全員見終わったら議論画面へ
+            document.getElementById("game-screen").classList.add("hidden");
+            document.getElementById("discussion-screen").classList.remove("hidden");
+        }
+    }
+
+    function showWord() {
+        if (currentPlayerIndex < currentWords.length) {
+            document.getElementById("word-display").innerText = currentWords[currentPlayerIndex];
+            hasViewed = true;
+        }
+    }
+
+    function hideWord() {
+        if (currentPlayerIndex < currentWords.length) {
+            document.getElementById("word-display").innerText = "???";
+            // 一度でもお題を見たら「次のプレイヤーへ」進むためのエリアを表示する
+            if (hasViewed) {
+                document.getElementById("next-action-area").classList.remove("hidden");
+                document.getElementById("view-btn").classList.add("hidden");
+            }
+        }
+    }
+
+    function nextPlayer() {
+        currentPlayerIndex++;
+        updatePlayerTurn();
+    }
+
+    // イベントリスナーの設定（PCとスマホの両方に対応）
+    const viewBtn = document.getElementById("view-btn");
+    
+    // マウスイベント
+    viewBtn.addEventListener("mousedown", showWord);
+    viewBtn.addEventListener("mouseup", hideWord);
+    viewBtn.addEventListener("mouseleave", hideWord); // ボタン外にカーソルが外れた時用
+    
+    // タッチイベント（スマホ用）
+    viewBtn.addEventListener("touchstart", (e) => { 
+        e.preventDefault(); 
+        showWord(); 
+    });
+    viewBtn.addEventListener("touchend", (e) => { 
+        e.preventDefault(); 
+        hideWord(); 
+    });
+
+    function resetGame() {
+        document.getElementById("discussion-screen").classList.add("hidden");
+        document.getElementById("setup-screen").classList.remove("hidden");
+    }
 </script>
+
 </body>
 </html>
