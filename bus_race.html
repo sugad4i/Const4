@@ -52,7 +52,13 @@
             margin-bottom: 15px;
         }
         .input-group {
-            margin: 20px 0;
+            margin: 15px 0;
+        }
+        label {
+            display: inline-block;
+            width: 120px;
+            text-align: right;
+            margin-right: 10px;
         }
         input[type="number"] {
             padding: 8px;
@@ -78,7 +84,11 @@
         <p>オフィスに潜むウルフ（少数派）を見つけ出せ！</p>
         <div class="input-group">
             <label>プレイヤー人数：</label>
-            <input type="number" id="total-players" value="4" min="3" max="10"> 人
+            <input type="number" id="total-players" value="4" min="3" max="15" onchange="adjustWolfLimit()"> 人
+        </div>
+        <div class="input-group">
+            <label>ウルフの人数：</label>
+            <input type="number" id="wolf-players" value="1" min="1" max="2"> 人
         </div>
         <button onclick="startGame()">ゲームを開始する</button>
     </div>
@@ -136,9 +146,23 @@
         ["上司", "先輩"], ["部署移動", "転職"]
     ];
 
-    let playerList = []; // 各プレイヤーの情報 { id: 1, role: "市民", word: "...", alive: true }
+    let playerList = []; 
     let currentPlayerIndex = 0;
     let hasViewed = false;
+
+    // プレイヤー人数に応じてウルフの最大数を自動調整する関数
+    function adjustWolfLimit() {
+        const total = parseInt(document.getElementById("total-players").value);
+        const wolfInput = document.getElementById("wolf-players");
+        
+        // ウルフの数はプレイヤー未満（ゲーム成立のため最大でもプレイヤー数の半分未満に制限）
+        const maxWolf = Math.floor((total - 1) / 2);
+        wolfInput.max = maxWolf > 1 ? maxWolf : 1;
+        
+        if (parseInt(wolfInput.value) > maxWolf) {
+            wolfInput.value = maxWolf > 1 ? maxWolf : 1;
+        }
+    }
 
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -149,11 +173,18 @@
 
     function startGame() {
         const total = parseInt(document.getElementById("total-players").value);
-        if (total < 3) { alert("3人以上で遊んでな！"); return; }
+        const wolfCount = parseInt(document.getElementById("wolf-players").value);
 
-        // 役割の組み立て（基本ウルフは1人，人数が多ければ調整可能）
-        let roles = ["ウルフ"];
-        for (let i = 1; i < total; i++) {
+        if (total < 3) { alert("3人以上で遊んでな！"); return; }
+        if (wolfCount >= total) { alert("ウルフの数が多すぎるで！"); return; }
+        if (wolfCount < 1) { alert("ウルフは最低1人必要やで！"); return; }
+
+        // 役割の組み立て
+        let roles = [];
+        for (let i = 0; i < wolfCount; i++) {
+            roles.push("ウルフ");
+        }
+        for (let i = wolfCount; i < total; i++) {
             roles.push("市民");
         }
         shuffle(roles);
@@ -221,7 +252,6 @@
         renderAlivePlayers();
     }
 
-    // 生きとるプレイヤーのボタンを生成
     function renderAlivePlayers() {
         const container = document.getElementById("alive-players-container");
         container.innerHTML = "";
@@ -237,32 +267,29 @@
         });
     }
 
-    // プレイヤーを殺す（処刑）処理
     function killPlayer(id) {
         const target = playerList.find(p => p.id === id);
         target.alive = false;
 
-        // 正体バラシの演出
-        if (target.role === "ウルフ") {
-            alert(`プレイヤー ${id} を殺しました．\n正体は【ウルフ】でした！\n市民チームの勝ちや！`);
+        // 残り人数の確認用メッセージを作成
+        let message = `プレイヤー ${id} を殺しました．\n正体は【${target.role}】でした！\n\n`;
+
+        const aliveWolf = playerList.filter(p => p.alive && p.role === "ウルフ").length;
+        const aliveCitizen = playerList.filter(p => p.alive && p.role === "市民").length;
+
+        if (aliveWolf === 0) {
+            message += "ウルフは全滅したで！市民チームの勝ちや！";
+            alert(message);
+            resetGame();
+        } else if (aliveCitizen <= aliveWolf) {
+            message += "市民の数がウルフ以下になったわ…．\nウルフチームの勝ちや！";
+            alert(message);
             resetGame();
         } else {
-            // 生きとるウルフと市民の数を数える
-            const aliveWolf = playerList.filter(p => p.alive && p.role === "ウルフ").length;
-            const aliveCitizen = playerList.filter(p => p.alive && p.role === "市民").length;
-
-            if (aliveWolf === 0) {
-                alert(`プレイヤー ${id} を殺しました．\n正体は【市民】でした．\nウルフは全滅したで！市民チームの勝ちや！`);
-                resetGame();
-            } else if (aliveCitizen <= aliveWolf) {
-                alert(`プレイヤー ${id} を殺しました．\n正体は【市民】でした．\n市民の数がウルフ以下になったわ…．ウルフチームの勝ちや！`);
-                resetGame();
-            } else {
-                alert(`プレイヤー ${id} を殺しました．\n正体は【市民】でした…（無実）．\nまだウルフは潜んどるで！次の話し合いを始めてな．`);
-                // 再び話し合い画面に戻る
-                document.getElementById("vote-screen").classList.add("hidden");
-                document.getElementById("discussion-screen").classList.remove("hidden");
-            }
+            message += `残りウルフ：${aliveWolf}人 / 残り市民：${aliveCitizen}人\nまだ決着はついとらん！次の話し合いを始めてな．`;
+            alert(message);
+            document.getElementById("vote-screen").classList.add("hidden");
+            document.getElementById("discussion-screen").classList.remove("hidden");
         }
     }
 
@@ -278,6 +305,7 @@
         document.getElementById("discussion-screen").classList.add("hidden");
         document.getElementById("vote-screen").classList.add("hidden");
         document.getElementById("setup-screen").classList.remove("hidden");
+        adjustWolfLimit(); // リセット時に上限を再計算
     }
 </script>
 
