@@ -171,17 +171,14 @@
     let currentVoterIndex = 0;
     let voteCounts = {};  
 
-    // 初期化時に名前入力欄を生成
     window.onload = function() {
         updateNameInputs();
     };
 
-    // 人数に応じて名前入力欄を動的に増減させる
     function updateNameInputs() {
         const total = parseInt(document.getElementById("total-players").value);
         const container = document.getElementById("name-inputs-area");
         
-        // 既存の入力値を一時退避
         const currentValues = [];
         const existingInputs = container.querySelectorAll("input");
         existingInputs.forEach(input => currentValues.push(input.value));
@@ -197,7 +194,6 @@
             const input = document.createElement("input");
             input.type = "text";
             input.id = `player-name-${i}`;
-            // 退避した値があれば戻し、なければデフォルト名
             input.value = currentValues[i] || `プレイヤー${i + 1}`;
             
             div.appendChild(label);
@@ -211,10 +207,15 @@
     function adjustWolfLimit() {
         const total = parseInt(document.getElementById("total-players").value);
         const wolfInput = document.getElementById("wolf-players");
+        
+        // ウルフ数の上限設定（プレイヤー総数の半分未満に制限）
         const maxWolf = Math.floor((total - 1) / 2);
-        wolfInput.max = maxWolf > 1 ? maxWolf : 1;
-        if (parseInt(wolfInput.value) > maxWolf) {
-            wolfInput.value = maxWolf > 1 ? maxWolf : 1;
+        const allowedMax = maxWolf > 1 ? maxWolf : 1;
+        
+        wolfInput.max = allowedMax;
+        
+        if (parseInt(wolfInput.value) > allowedMax) {
+            wolfInput.value = allowedMax;
         }
     }
 
@@ -232,14 +233,12 @@
         if (total < 3) { alert("3人以上で遊んでな！"); return; }
         if (wolfCount >= total) { alert("ウルフの数が多すぎるで！"); return; }
 
-        // 入力された名前の取得
         let names = [];
         for (let i = 0; i < total; i++) {
             const nameVal = document.getElementById(`player-name-${i}`).value.trim();
             names.push(nameVal || `プレイヤー${i + 1}`);
         }
 
-        // 役割の組み立て
         let roles = [];
         for (let i = 0; i < wolfCount; i++) { roles.push("ウルフ"); }
         for (let i = wolfCount; i < total; i++) { roles.push("市民"); }
@@ -249,7 +248,6 @@
         const citizenWord = randomTheme[0];
         const wolfWord = randomTheme[1];
 
-        // 名前と役職をランダムに紐付け
         playerList = [];
         for (let i = 0; i < total; i++) {
             playerList.push({
@@ -261,7 +259,6 @@
             });
         }
         
-        // 念のためプレイヤーリスト自体も確認順がランダムになるようにシャffle
         shuffle(playerList);
         
         currentPlayerIndex = 0;
@@ -402,7 +399,7 @@
         document.getElementById("discussion-screen").classList.add("hidden");
         document.getElementById("vote-screen").classList.add("hidden");
         document.getElementById("setup-screen").classList.remove("hidden");
-        updateNameInputs(); // リセット時に名前入力欄を再配置
+        updateNameInputs();
     }
 </script>
 
