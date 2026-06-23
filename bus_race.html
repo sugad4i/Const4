@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ワードウルフ</title>
+    <title>事務系ワードウルフ</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -66,7 +66,25 @@
             width: 60px;
             text-align: center;
         }
-        .alive-list {
+        .name-inputs-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 15px 0;
+            background: #fafafa;
+            border-radius: 6px;
+        }
+        .name-input-item {
+            margin: 8px 0;
+            text-align: center;
+        }
+        .name-input-item input {
+            padding: 6px;
+            font-size: 14px;
+            width: 150px;
+        }
+        .target-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -77,37 +95,39 @@
 <body>
 
 <div class="container">
-    <h1>🐺 ワードウルフ 🐺</h1>
+    <h1>🐺 事務系ワードウルフ 🐺</h1>
     
-    <!-- 設定画面 -->
     <div id="setup-screen">
         <p>オフィスに潜むウルフ（少数派）を見つけ出せ！</p>
         <div class="input-group">
             <label>プレイヤー人数：</label>
-            <input type="number" id="total-players" value="4" min="3" max="15" onchange="adjustWolfLimit()"> 人
+            <input type="number" id="total-players" value="4" min="3" max="15" onchange="updateNameInputs()"> 人
         </div>
         <div class="input-group">
             <label>ウルフの人数：</label>
             <input type="number" id="wolf-players" value="1" min="1" max="2"> 人
         </div>
+        
+        <h3>👤 プレイヤー名入力</h3>
+        <div class="name-inputs-container" id="name-inputs-area">
+            </div>
+
         <button onclick="startGame()">ゲームを開始する</button>
     </div>
 
-    <!-- お題確認画面 -->
     <div id="game-screen" class="hidden">
-        <h2 id="player-turn">プレイヤー 1 の番です</h2>
-        <p class="instructions">「お題を見る」ボタンを押しとる間だけ，自分のお題が表示されるで．周りに見られんように気をつけてな！</p>
+        <h2 id="player-turn">○○ さんの番です</h2>
+        <p class="instructions">ボタンを押すとお題が表示されます．確認したらもう一度押して隠すか，次の人へ交代してな！</p>
         
         <div class="secret-card" id="word-display" style="user-select: none;">???</div>
         
-        <button id="view-btn">お題を見る（長押し）</button>
+        <button id="view-btn" onclick="toggleWord()">お題を見る</button>
         <div id="next-action-area" class="hidden">
-            <p>確認したら，次のプレイヤーに交代してな．</p>
+            <p>確認したら，画面を隠して次のプレイヤーに交代してな．</p>
             <button onclick="nextPlayer()" class="secondary">次のプレイヤーへ</button>
         </div>
     </div>
 
-    <!-- 議論画面 -->
     <div id="discussion-screen" class="hidden">
         <h2>🗣️ 話し合いタイム 🗣️</h2>
         <p>事務仕事の感覚を研ぎ澄ませて，誰がウルフか炙り出すんや！</p>
@@ -115,19 +135,16 @@
         <button onclick="goToVote()">投票画面へ</button>
     </div>
 
-    <!-- 投票・処刑画面 -->
     <div id="vote-screen" class="hidden">
-        <h2>投票で1人ずつ殺せます</h2>
-        <p>話し合いの結果，一番怪しいと思う人を1人選んで殺してな．</p>
-        <div class="alive-list" id="alive-players-container">
-            <!-- 生存プレイヤーのボタンがここに生成される -->
-        </div>
+        <h2 id="voter-turn">○○ さんの投票</h2>
+        <p class="instructions">スマホを順番に回して，自分が怪しいと思うプレイヤーを1人選んでな！</p>
+        <div class="target-list" id="vote-targets-container">
+            </div>
         <button onclick="resetGame()" class="secondary">タイトルへ戻る</button>
     </div>
 </div>
 
 <script>
-    // 事務系に特化したお題リスト
     const themeList = [
         ["Excel（エクセル）", "Word（ワード）"], ["Slack（スラック）", "LINE WORKS"],
         ["Zoom（ズーム）", "Teams（チームズ）"], ["デスクトップPC", "ノートPC"],
@@ -148,17 +165,54 @@
 
     let playerList = []; 
     let currentPlayerIndex = 0;
-    let hasViewed = false;
+    let isShowing = false;
 
-    // プレイヤー人数に応じてウルフの最大数を自動調整する関数
+    let aliveVoters = []; 
+    let currentVoterIndex = 0;
+    let voteCounts = {};  
+
+    // 初期化時に名前入力欄を生成
+    window.onload = function() {
+        updateNameInputs();
+    };
+
+    // 人数に応じて名前入力欄を動的に増減させる
+    function updateNameInputs() {
+        const total = parseInt(document.getElementById("total-players").value);
+        const container = document.getElementById("name-inputs-area");
+        
+        // 既存の入力値を一時退避
+        const currentValues = [];
+        const existingInputs = container.querySelectorAll("input");
+        existingInputs.forEach(input => currentValues.push(input.value));
+
+        container.innerHTML = "";
+        for (let i = 0; i < total; i++) {
+            const div = document.createElement("div");
+            div.className = "name-input-item";
+            
+            const label = document.createElement("span");
+            label.innerText = `プレイヤー ${i + 1}：`;
+            
+            const input = document.createElement("input");
+            input.type = "text";
+            input.id = `player-name-${i}`;
+            // 退避した値があれば戻し、なければデフォルト名
+            input.value = currentValues[i] || `プレイヤー${i + 1}`;
+            
+            div.appendChild(label);
+            div.appendChild(input);
+            container.appendChild(div);
+        }
+
+        adjustWolfLimit();
+    }
+
     function adjustWolfLimit() {
         const total = parseInt(document.getElementById("total-players").value);
         const wolfInput = document.getElementById("wolf-players");
-        
-        // ウルフの数はプレイヤー未満（ゲーム成立のため最大でもプレイヤー数の半分未満に制限）
         const maxWolf = Math.floor((total - 1) / 2);
         wolfInput.max = maxWolf > 1 ? maxWolf : 1;
-        
         if (parseInt(wolfInput.value) > maxWolf) {
             wolfInput.value = maxWolf > 1 ? maxWolf : 1;
         }
@@ -177,33 +231,38 @@
 
         if (total < 3) { alert("3人以上で遊んでな！"); return; }
         if (wolfCount >= total) { alert("ウルフの数が多すぎるで！"); return; }
-        if (wolfCount < 1) { alert("ウルフは最低1人必要やで！"); return; }
+
+        // 入力された名前の取得
+        let names = [];
+        for (let i = 0; i < total; i++) {
+            const nameVal = document.getElementById(`player-name-${i}`).value.trim();
+            names.push(nameVal || `プレイヤー${i + 1}`);
+        }
 
         // 役割の組み立て
         let roles = [];
-        for (let i = 0; i < wolfCount; i++) {
-            roles.push("ウルフ");
-        }
-        for (let i = wolfCount; i < total; i++) {
-            roles.push("市民");
-        }
+        for (let i = 0; i < wolfCount; i++) { roles.push("ウルフ"); }
+        for (let i = wolfCount; i < total; i++) { roles.push("市民"); }
         shuffle(roles);
 
-        // お題の決定
         const randomTheme = themeList[Math.floor(Math.random() * themeList.length)];
         const citizenWord = randomTheme[0];
         const wolfWord = randomTheme[1];
 
-        // プレイヤーデータの初期化
+        // 名前と役職をランダムに紐付け
         playerList = [];
         for (let i = 0; i < total; i++) {
             playerList.push({
                 id: i + 1,
+                name: names[i],
                 role: roles[i],
                 word: roles[i] === "市民" ? citizenWord : wolfWord,
                 alive: true
             });
         }
+        
+        // 念のためプレイヤーリスト自体も確認順がランダムになるようにシャffle
+        shuffle(playerList);
         
         currentPlayerIndex = 0;
         document.getElementById("setup-screen").classList.add("hidden");
@@ -213,31 +272,32 @@
 
     function updatePlayerTurn() {
         if (currentPlayerIndex < playerList.length) {
-            document.getElementById("player-turn").innerText = `プレイヤー ${playerList[currentPlayerIndex].id} の番です`;
+            document.getElementById("player-turn").innerText = `${playerList[currentPlayerIndex].name} さんの番です`;
             document.getElementById("word-display").innerText = "???";
+            document.getElementById("view-btn").innerText = "お題を見る";
             document.getElementById("next-action-area").classList.add("hidden");
-            document.getElementById("view-btn").classList.remove("hidden");
-            hasViewed = false;
+            isShowing = false;
         } else {
             document.getElementById("game-screen").classList.add("hidden");
             document.getElementById("discussion-screen").classList.remove("hidden");
         }
     }
 
-    function showWord() {
-        if (currentPlayerIndex < playerList.length) {
-            document.getElementById("word-display").innerText = playerList[currentPlayerIndex].word;
-            hasViewed = true;
-        }
-    }
+    function toggleWord() {
+        if (currentPlayerIndex >= playerList.length) return;
+        const wordDisplay = document.getElementById("word-display");
+        const viewBtn = document.getElementById("view-btn");
+        const nextArea = document.getElementById("next-action-area");
 
-    function hideWord() {
-        if (currentPlayerIndex < playerList.length) {
-            document.getElementById("word-display").innerText = "???";
-            if (hasViewed) {
-                document.getElementById("next-action-area").classList.remove("hidden");
-                document.getElementById("view-btn").classList.add("hidden");
-            }
+        if (!isShowing) {
+            wordDisplay.innerText = playerList[currentPlayerIndex].word;
+            viewBtn.innerText = "お題を隠す";
+            nextArea.classList.remove("hidden");
+            isShowing = true;
+        } else {
+            wordDisplay.innerText = "???";
+            viewBtn.innerText = "お題を見る";
+            isShowing = false;
         }
     }
 
@@ -249,30 +309,75 @@
     function goToVote() {
         document.getElementById("discussion-screen").classList.add("hidden");
         document.getElementById("vote-screen").classList.remove("hidden");
-        renderAlivePlayers();
+        
+        aliveVoters = playerList.filter(p => p.alive);
+        currentVoterIndex = 0;
+        
+        voteCounts = {};
+        playerList.forEach(p => { if(p.alive) voteCounts[p.id] = 0; });
+
+        renderVoteTurn();
     }
 
-    function renderAlivePlayers() {
-        const container = document.getElementById("alive-players-container");
-        container.innerHTML = "";
+    function renderVoteTurn() {
+        if (currentVoterIndex < aliveVoters.length) {
+            const voter = aliveVoters[currentVoterIndex];
+            document.getElementById("voter-turn").innerText = `${voter.name} さんの投票番やで`;
+            
+            const container = document.getElementById("vote-targets-container");
+            container.innerHTML = "";
 
-        playerList.forEach(p => {
-            if (p.alive) {
-                const btn = document.createElement("button");
-                btn.className = "danger";
-                btn.innerText = `プレイヤー ${p.id} を殺す`;
-                btn.onclick = () => killPlayer(p.id);
-                container.appendChild(btn);
+            playerList.forEach(p => {
+                if (p.alive && p.id !== voter.id) {
+                    const btn = document.createElement("button");
+                    btn.className = "danger";
+                    btn.innerText = `${p.name} に投票`;
+                    btn.onclick = () => castVote(p.id);
+                    container.appendChild(btn);
+                }
+            });
+        } else {
+            tallyVotes();
+        }
+    }
+
+    function castVote(targetId) {
+        voteCounts[targetId]++;
+        currentVoterIndex++;
+        renderVoteTurn();
+    }
+
+    function tallyVotes() {
+        let maxVotes = -1;
+        let candidates = [];
+
+        for (let id in voteCounts) {
+            if (voteCounts[id] > maxVotes) {
+                maxVotes = voteCounts[id];
+                candidates = [parseInt(id)];
+            } else if (voteCounts[id] === maxVotes) {
+                candidates.push(parseInt(id));
             }
-        });
+        }
+
+        if (candidates.length > 1) {
+            const candidateNames = candidates.map(id => {
+                return playerList.find(p => p.id === id).name;
+            });
+            alert(`投票が同数（${maxVotes}票）で割れたわ！\n対象：${candidateNames.join(", ")}\nもう一回話し合って決選投票してな！`);
+            goToVote();
+            return;
+        }
+
+        const killedId = candidates[0];
+        killPlayer(killedId);
     }
 
     function killPlayer(id) {
         const target = playerList.find(p => p.id === id);
         target.alive = false;
 
-        // 残り人数の確認用メッセージを作成
-        let message = `プレイヤー ${id} を殺しました．\n正体は【${target.role}】でした！\n\n`;
+        let message = `投票の結果，一番票が集まった ${target.name} さんが殺されました．\n正体は【${target.role}】でした！\n\n`;
 
         const aliveWolf = playerList.filter(p => p.alive && p.role === "ウルフ").length;
         const aliveCitizen = playerList.filter(p => p.alive && p.role === "市民").length;
@@ -293,19 +398,11 @@
         }
     }
 
-    // イベント設定
-    const viewBtn = document.getElementById("view-btn");
-    viewBtn.addEventListener("mousedown", showWord);
-    viewBtn.addEventListener("mouseup", hideWord);
-    viewBtn.addEventListener("mouseleave", hideWord);
-    viewBtn.addEventListener("touchstart", (e) => { e.preventDefault(); showWord(); });
-    viewBtn.addEventListener("touchend", (e) => { e.preventDefault(); hideWord(); });
-
     function resetGame() {
         document.getElementById("discussion-screen").classList.add("hidden");
         document.getElementById("vote-screen").classList.add("hidden");
         document.getElementById("setup-screen").classList.remove("hidden");
-        adjustWolfLimit(); // リセット時に上限を再計算
+        updateNameInputs(); // リセット時に名前入力欄を再配置
     }
 </script>
 
