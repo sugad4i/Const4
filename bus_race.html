@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>事務系ワードウルフ</title>
+    <title>ワードウルフ</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -95,10 +95,10 @@
 <body>
 
 <div class="container">
-    <h1>🐺 事務系ワードウルフ 🐺</h1>
+    <h1>🐺 ワードウルフ 🐺</h1>
     
     <div id="setup-screen">
-        <p>オフィスに潜むウルフ（少数派）を見つけ出せ！</p>
+        <p>みんなの中に潜むウルフ（少数派）を見つけ出せ！</p>
         <div class="input-group">
             <label>プレイヤー人数：</label>
             <input type="number" id="total-players" value="4" min="3" max="15" onchange="updateNameInputs()"> 人
@@ -130,7 +130,6 @@
 
     <div id="discussion-screen" class="hidden">
         <h2>🗣️ 話し合いタイム 🗣️</h2>
-        <p>事務仕事の感覚を研ぎ澄ませて，誰がウルフか炙り出すんや！</p>
         <p>話し合いが終わったら，下のボタンを押して投票に進んでな．</p>
         <button onclick="goToVote()">投票画面へ</button>
     </div>
@@ -208,7 +207,6 @@
         const total = parseInt(document.getElementById("total-players").value);
         const wolfInput = document.getElementById("wolf-players");
         
-        // ウルフ数の上限設定（プレイヤー総数の半分未満に制限）
         const maxWolf = Math.floor((total - 1) / 2);
         const allowedMax = maxWolf > 1 ? maxWolf : 1;
         
